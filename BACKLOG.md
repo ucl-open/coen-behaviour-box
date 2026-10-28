@@ -27,7 +27,7 @@ Found while building this workflow on 28 Oct 2026. Open each with the line `*Com
 
 ## rig-setup
 
-- **Back up `rig.yml` to the share.** Decided 28 Oct 2026: `C:\RigConfigs\<MACHINE>\rig.yml` on the rig is the master and is edited there; rig-setup copies it one way up to `K:\config\<MACHINE>\` with a last-synced time, as it does `Health.json`. The workflow reads only the local file, so a rig runs while the server is down. Not server-to-rig, because `config/` on the share is writable by rigs only (`2750 svc-rig:lab-tonic`), and not a two-way mirror. Copy to a temporary name and rename, and never touch the local file from the sync. Also: set up the clone (`deploy.cmd`) when rig-setup first clones it.
+- **Back up `rig.yml` to the share.** Decided 28 Oct 2026: `C:\RigConfigs\<MACHINE>\rig.yml` on the rig is the master and is edited there; rig-setup copies it one way up to `K:\config\<MACHINE>\` with a last-synced time, as it does `Health.json`. The workflow reads only the local file, so a rig runs while the server is down. Not server-to-rig, because `config/` on the share is writable by rigs only (`2750 svc-rig:lab-tonic`), and not a two-way mirror. Copy to a temporary name and rename, and never touch the local file from the sync. Also: set up the clone (`deploy.cmd`) when rig-setup first clones it, and give `rig-behaviour-box` the .NET SDK, which deploy's regeneration needs (Pip's choice over skipping regeneration on rigs, to stay identical to the open-rigs template). The full plan is in Coen-Lab/rig-setup `BACKLOG.md`, "Behaviour box on `ucl-open/coen-behaviour-box`".
 
 ## Audit 28 Oct 2026: not changed
 
