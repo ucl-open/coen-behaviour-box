@@ -1,0 +1,107 @@
+{
+  "$defs": {
+    "ExperimentSession": {
+      "description": "The base class for creating open-rigs experiment models.",
+      "properties": {
+        "workflow": {
+          "description": "Path to the workflow running the experiment.",
+          "title": "Workflow",
+          "type": "string"
+        },
+        "commit": {
+          "description": "Commit hash of the experiment repo.",
+          "title": "Commit",
+          "type": "string"
+        },
+        "repositoryUrl": {
+          "description": "The URL of the git repository used to version experiment source code.",
+          "title": "RepositoryUrl",
+          "type": "string"
+        },
+        "subjectId": {
+          "description": "The subject id for this session.",
+          "title": "SubjectId",
+          "type": "string"
+        },
+        "sessionId": {
+          "description": "The session identifier.",
+          "title": "SessionId",
+          "type": "string"
+        }
+      },
+      "required": [
+        "workflow",
+        "commit",
+        "repositoryUrl",
+        "subjectId",
+        "sessionId"
+      ],
+      "title": "ExperimentSession",
+      "type": "object"
+    },
+    "UclOpenCoenBehaviourBoxRig": {
+      "properties": {
+        "rootPath": {
+          "description": "The root path on which to log all data.",
+          "title": "RootPath",
+          "type": "string"
+        },
+        "version": {
+          "const": "0.0.0-rc1",
+          "default": "0.0.0-rc1",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rootPath"
+      ],
+      "title": "UclOpenCoenBehaviourBoxRig",
+      "type": "object"
+    },
+    "UclOpenCoenBehaviourBoxTaskLogic": {
+      "properties": {
+        "version": {
+          "const": "0.0.0-rc1",
+          "default": "0.0.0-rc1",
+          "title": "Version",
+          "type": "string"
+        },
+        "name": {
+          "const": "UclOpenCoenBehaviourBox",
+          "default": "UclOpenCoenBehaviourBox",
+          "description": "Name of the task logic",
+          "title": "Name",
+          "type": "string"
+        },
+        "taskParameters": {
+          "$ref": "#/$defs/UclOpenCoenBehaviourBoxTaskParameters",
+          "description": "Parameters of the task logic",
+          "title": "TaskParameters"
+        }
+      },
+      "required": [
+        "taskParameters"
+      ],
+      "title": "UclOpenCoenBehaviourBoxTaskLogic",
+      "type": "object"
+    },
+    "UclOpenCoenBehaviourBoxTaskParameters": {
+      "properties": {},
+      "title": "UclOpenCoenBehaviourBoxTaskParameters",
+      "type": "object"
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/UclOpenCoenBehaviourBoxTaskLogic"
+    },
+    {
+      "$ref": "#/$defs/UclOpenCoenBehaviourBoxRig"
+    },
+    {
+      "$ref": "#/$defs/ExperimentSession"
+    }
+  ],
+  "title": "RootModel[Union[UclOpenCoenBehaviourBoxTaskLogic, UclOpenCoenBehaviourBoxRig, ExperimentSession]]"
+}
