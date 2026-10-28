@@ -7,3 +7,5 @@
 src/Extensions/*.Generated.cs text eol=lf
 src/DataSchemas/*.json text eol=crlf
 config/rig-template.yml text eol=crlf
+# Bonsai rewrites its config with CRLF when it restores packages.
+.bonsai/Bonsai.config text eol=crlf
