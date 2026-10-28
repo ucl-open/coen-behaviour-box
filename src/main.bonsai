@@ -351,7 +351,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>RecordVideo</Name>
-        <Description>Records RecordingFrames frames: H.264 video through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, used by OpenRigs.Logging LogVideo, fell behind on the N150 and crashed long sessions) and a CSV row per frame with the Harp time, camera timestamp, FrameID, configured exposure, centre of mass of the pixels darker than TrackingThreshold, and the running wheel distance. Wait for ffmpeg.exe to exit before closing Bonsai.</Description>
+        <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records RecordingFrames frames: H.264 video through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, used by OpenRigs.Logging LogVideo, fell behind on the N150 and crashed long sessions) and a CSV row per frame with the Harp time, camera timestamp, FrameID, configured exposure, centre of mass of the pixels darker than TrackingThreshold, and the running wheel distance. Wait for ffmpeg.exe to exit before closing Bonsai.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="WorkflowInput">
@@ -600,6 +600,12 @@
         </Workflow>
       </Expression>
       <Expression xsi:type="SubscribeSubject">
+        <Name>PathPrefix</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:SubscribeWhen" />
+      </Expression>
+      <Expression xsi:type="SubscribeSubject">
         <Name>BehaviorEvents</Name>
       </Expression>
       <Expression xsi:type="SubscribeSubject">
@@ -653,9 +659,11 @@
       <Edge From="39" To="40" Label="Source1" />
       <Edge From="40" To="41" Label="Source1" />
       <Edge From="42" To="43" Label="Source1" />
-      <Edge From="44" To="46" Label="Source1" />
-      <Edge From="45" To="46" Label="Source2" />
-      <Edge From="46" To="47" Label="Source1" />
+      <Edge From="43" To="45" Label="Source1" />
+      <Edge From="44" To="45" Label="Source2" />
+      <Edge From="46" To="48" Label="Source1" />
+      <Edge From="47" To="48" Label="Source2" />
+      <Edge From="48" To="49" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
