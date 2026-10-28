@@ -31,4 +31,12 @@ SHA-256 of the packages as committed (built with .NET SDK 8.0.424 on 28 Oct 2026
 26b0e832a0b4bd83adf8533cf62c12f6995b9b8a6761c604cd62b6522661fe2a  OpenRigs.Video.0.1.0-bbox.1.nupkg
 ```
 
+## Bonsai.FFmpeg 0.2.0-uniquepipe
+
+`local_packages/Bonsai.FFmpeg.0.2.0-uniquepipe.nupkg` is copied unchanged from Coen-Lab/hw-behaviour-box, where it was built: [bonsai-rx/ffmpeg](https://github.com/bonsai-rx/ffmpeg) tag `v0.2.0` (`ee403aeca3d6ecb214487a5c41d94b2f2b541526`) plus `bonsai-ffmpeg-unique-pipe.patch`, which names each recording's pipe after the file stem plus a GUID, so a Start while the previous recording's ffmpeg is still draining no longer fails with "All pipe instances are busy." DLL SHA-256 `ecb50c0d0618e5e31969d9c7a45a1b82a7f362db97a5cc831e884087433a5403`; package SHA-256 `43e124e7608ff0ec32ced7edf5b5fd2ff34c4072d027ccd75c1d76fa1e950d00`. Licence in `THIRD-PARTY-NOTICES.md`.
+
+FFmpeg replaces Bonsai.Vision's `VideoWriter` (what `OpenRigs.Logging:LogVideo` uses) because that writer encodes FMP4 on one thread inside Bonsai: on the box's Intel N150 at 1440 x 1080, 50 Hz it fell behind whenever the CPU was busy, queued about 1 GB of frames a minute in RAM, and crashed a 30-minute session at about 23 minutes (hw-behaviour-box 25a0bcd). FFmpeg encodes H.264 on Intel Quick Sync with flat memory.
+
+## Switching to upstream
+
 When open-rigs publishes a release containing both fixes and the config operators, set `rigs_version` in `.bonsai/Bonsai.config` to it, delete `local_packages/` and this folder, and remove the `local packages` source from `.bonsai/NuGet.config`.

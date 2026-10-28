@@ -10,6 +10,352 @@ namespace UclOpenCoenBehaviourBox
     #pragma warning disable // Disable all warnings
 
     /// <summary>
+    /// Represents a Harp Behavior Board device.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("Represents a Harp Behavior Board device.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class BehaviorBoard
+    {
+    
+        private string _portName;
+    
+        private PulseController _pulseController;
+    
+        private CameraTriggerController _cameraTriggerController;
+    
+        private RunningWheel _runningWheel;
+    
+        public BehaviorBoard()
+        {
+        }
+    
+        protected BehaviorBoard(BehaviorBoard other)
+        {
+            _portName = other._portName;
+            _pulseController = other._pulseController;
+            _cameraTriggerController = other._cameraTriggerController;
+            _runningWheel = other._runningWheel;
+        }
+    
+        /// <summary>
+        /// The name of the device serial port.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("portName", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="portName")]
+        [System.ComponentModel.DescriptionAttribute("The name of the device serial port.")]
+        public string PortName
+        {
+            get
+            {
+                return _portName;
+            }
+            set
+            {
+                _portName = value;
+            }
+        }
+    
+        /// <summary>
+        /// Optional PulseController module for generating digital output pulses.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("pulseController")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="pulseController")]
+        [System.ComponentModel.DescriptionAttribute("Optional PulseController module for generating digital output pulses.")]
+        public PulseController PulseController
+        {
+            get
+            {
+                return _pulseController;
+            }
+            set
+            {
+                _pulseController = value;
+            }
+        }
+    
+        /// <summary>
+        /// Optional CameraTriggerController module for emitting camera trigger pulses.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("cameraTriggerController")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="cameraTriggerController")]
+        [System.ComponentModel.DescriptionAttribute("Optional CameraTriggerController module for emitting camera trigger pulses.")]
+        public CameraTriggerController CameraTriggerController
+        {
+            get
+            {
+                return _cameraTriggerController;
+            }
+            set
+            {
+                _cameraTriggerController = value;
+            }
+        }
+    
+        /// <summary>
+        /// Optional RunningWheelModule module to define wheel geometry.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("runningWheel")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="runningWheel")]
+        [System.ComponentModel.DescriptionAttribute("Optional RunningWheelModule module to define wheel geometry.")]
+        public RunningWheel RunningWheel
+        {
+            get
+            {
+                return _runningWheel;
+            }
+            set
+            {
+                _runningWheel = value;
+            }
+        }
+    
+        public System.IObservable<BehaviorBoard> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new BehaviorBoard(this)));
+        }
+    
+        public System.IObservable<BehaviorBoard> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new BehaviorBoard(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("PortName = " + _portName + ", ");
+            stringBuilder.Append("PulseController = " + _pulseController + ", ");
+            stringBuilder.Append("CameraTriggerController = " + _cameraTriggerController + ", ");
+            stringBuilder.Append("RunningWheel = " + _runningWheel);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    /// <summary>
+    /// A pulsed output whose width comes from a calibration curve at run time, such as a reward valve.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("A pulsed output whose width comes from a calibration curve at run time, such as a" +
+        " reward valve.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class CalibratedPulse : PulseOutput
+    {
+    
+        private string _artefact;
+    
+        private OpenRigs.Core.CalibrationModel _fit;
+    
+        private int _maxAgeDays;
+    
+        public CalibratedPulse()
+        {
+            _fit = OpenRigs.Core.CalibrationModel.LinearFit;
+            _maxAgeDays = 90;
+        }
+    
+        protected CalibratedPulse(CalibratedPulse other) : 
+                base(other)
+        {
+            _artefact = other._artefact;
+            _fit = other._fit;
+            _maxAgeDays = other._maxAgeDays;
+        }
+    
+        /// <summary>
+        /// Relative path of the CalibrationCurve that converts the requested quantity to a pulse width: a file written by the platform's DispenseCalibration procedure into this machine's calibration folder.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("artefact", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="artefact")]
+        [System.ComponentModel.DescriptionAttribute("Relative path of the CalibrationCurve that converts the requested quantity to a p" +
+            "ulse width: a file written by the platform\'s DispenseCalibration procedure into " +
+            "this machine\'s calibration folder.")]
+        public string Artefact
+        {
+            get
+            {
+                return _artefact;
+            }
+            set
+            {
+                _artefact = value;
+            }
+        }
+    
+        /// <summary>
+        /// How the rig fits the artefact's points at startup. LinearFit suits repeated weighings.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("fit")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="fit")]
+        [System.ComponentModel.DescriptionAttribute("How the rig fits the artefact\'s points at startup. LinearFit suits repeated weigh" +
+            "ings.")]
+        public OpenRigs.Core.CalibrationModel Fit
+        {
+            get
+            {
+                return _fit;
+            }
+            set
+            {
+                _fit = value;
+            }
+        }
+    
+        /// <summary>
+        /// Warn at startup when the artefact is older than this many days. 0 disables the check.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("maxAgeDays")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="maxAgeDays")]
+        [System.ComponentModel.DescriptionAttribute("Warn at startup when the artefact is older than this many days. 0 disables the ch" +
+            "eck.")]
+        public int MaxAgeDays
+        {
+            get
+            {
+                return _maxAgeDays;
+            }
+            set
+            {
+                _maxAgeDays = value;
+            }
+        }
+    
+        public System.IObservable<CalibratedPulse> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new CalibratedPulse(this)));
+        }
+    
+        public System.IObservable<CalibratedPulse> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new CalibratedPulse(this));
+        }
+    
+        protected override bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            if (base.PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(", ");
+            }
+            stringBuilder.Append("Artefact = " + _artefact + ", ");
+            stringBuilder.Append("Fit = " + _fit + ", ");
+            stringBuilder.Append("MaxAgeDays = " + _maxAgeDays);
+            return true;
+        }
+    }
+
+
+    /// <summary>
+    /// Represents a CameraTriggerController module on a BehaviorBoard device.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("Represents a CameraTriggerController module on a BehaviorBoard device.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class CameraTriggerController
+    {
+    
+        private int _trigger0Frequency;
+    
+        private int _trigger1Frequency;
+    
+        public CameraTriggerController()
+        {
+        }
+    
+        protected CameraTriggerController(CameraTriggerController other)
+        {
+            _trigger0Frequency = other._trigger0Frequency;
+            _trigger1Frequency = other._trigger1Frequency;
+        }
+    
+        /// <summary>
+        /// The frequency, in Hz, at which to emit camera triggers on Trigger0 (DO0, CameraOutput0)
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("trigger0Frequency", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="trigger0Frequency")]
+        [System.ComponentModel.DescriptionAttribute("The frequency, in Hz, at which to emit camera triggers on Trigger0 (DO0, CameraOu" +
+            "tput0)")]
+        public int Trigger0Frequency
+        {
+            get
+            {
+                return _trigger0Frequency;
+            }
+            set
+            {
+                _trigger0Frequency = value;
+            }
+        }
+    
+        /// <summary>
+        /// The frequency, in Hz, at which to emit camera triggers on Trigger1 (DO1, CameraOutput1)
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("trigger1Frequency", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="trigger1Frequency")]
+        [System.ComponentModel.DescriptionAttribute("The frequency, in Hz, at which to emit camera triggers on Trigger1 (DO1, CameraOu" +
+            "tput1)")]
+        public int Trigger1Frequency
+        {
+            get
+            {
+                return _trigger1Frequency;
+            }
+            set
+            {
+                _trigger1Frequency = value;
+            }
+        }
+    
+        public System.IObservable<CameraTriggerController> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new CameraTriggerController(this)));
+        }
+    
+        public System.IObservable<CameraTriggerController> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new CameraTriggerController(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("Trigger0Frequency = " + _trigger0Frequency + ", ");
+            stringBuilder.Append("Trigger1Frequency = " + _trigger1Frequency);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    /// <summary>
     /// The base class for creating open-rigs experiment models.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
@@ -167,6 +513,606 @@ namespace UclOpenCoenBehaviourBox
     }
 
 
+    /// <summary>
+    /// A pulsed output whose width is set in the rig configuration, such as an LED, an air puff or a TTL.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("A pulsed output whose width is set in the rig configuration, such as an LED, an a" +
+        "ir puff or a TTL.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class FixedPulse : PulseOutput
+    {
+    
+        private int _pulseWidthMs;
+    
+        public FixedPulse()
+        {
+        }
+    
+        protected FixedPulse(FixedPulse other) : 
+                base(other)
+        {
+            _pulseWidthMs = other._pulseWidthMs;
+        }
+    
+        /// <summary>
+        /// Pulse duration, in milliseconds.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("pulseWidthMs", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="pulseWidthMs")]
+        [System.ComponentModel.DescriptionAttribute("Pulse duration, in milliseconds.")]
+        public int PulseWidthMs
+        {
+            get
+            {
+                return _pulseWidthMs;
+            }
+            set
+            {
+                _pulseWidthMs = value;
+            }
+        }
+    
+        public System.IObservable<FixedPulse> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new FixedPulse(this)));
+        }
+    
+        public System.IObservable<FixedPulse> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new FixedPulse(this));
+        }
+    
+        protected override bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            if (base.PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(", ");
+            }
+            stringBuilder.Append("PulseWidthMs = " + _pulseWidthMs);
+            return true;
+        }
+    }
+
+
+    /// <summary>
+    /// Represents the PulseController module on the BehaviorBoard.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("Represents the PulseController module on the BehaviorBoard.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class PulseController
+    {
+    
+        private Harp.Behavior.DigitalOutputs _outputPulseEnable;
+    
+        private PulseOutputs _outputs;
+    
+        public PulseController()
+        {
+            _outputs = new PulseOutputs();
+        }
+    
+        protected PulseController(PulseController other)
+        {
+            _outputPulseEnable = other._outputPulseEnable;
+            _outputs = other._outputs;
+        }
+    
+        /// <summary>
+        /// Digital output lines enabled for pulse generation, comma separated.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("outputPulseEnable")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="outputPulseEnable")]
+        [System.ComponentModel.DescriptionAttribute("Digital output lines enabled for pulse generation, comma separated.")]
+        public Harp.Behavior.DigitalOutputs OutputPulseEnable
+        {
+            get
+            {
+                return _outputPulseEnable;
+            }
+            set
+            {
+                _outputPulseEnable = value;
+            }
+        }
+    
+        /// <summary>
+        /// Pulse source of each digital output line.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("outputs", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="outputs")]
+        [System.ComponentModel.DescriptionAttribute("Pulse source of each digital output line.")]
+        public PulseOutputs Outputs
+        {
+            get
+            {
+                return _outputs;
+            }
+            set
+            {
+                _outputs = value;
+            }
+        }
+    
+        public System.IObservable<PulseController> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new PulseController(this)));
+        }
+    
+        public System.IObservable<PulseController> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new PulseController(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("OutputPulseEnable = " + _outputPulseEnable + ", ");
+            stringBuilder.Append("Outputs = " + _outputs);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [Newtonsoft.Json.JsonConverter(typeof(JsonInheritanceConverter), "discriminatorType")]
+    [YamlDiscriminator("discriminatorType")]
+    [JsonInheritanceAttribute("FixedPulse", typeof(FixedPulse))]
+    [JsonInheritanceAttribute("CalibratedPulse", typeof(CalibratedPulse))]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class PulseOutput
+    {
+    
+        public PulseOutput()
+        {
+        }
+    
+        protected PulseOutput(PulseOutput other)
+        {
+        }
+    
+        public System.IObservable<PulseOutput> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new PulseOutput(this)));
+        }
+    
+        public System.IObservable<PulseOutput> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new PulseOutput(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            return false;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    /// <summary>
+    /// The pulse source of each behavior board digital output line. Each line appears once.
+    ///
+    ///All three lines are required: a union has no default that survives code generation, so an
+    ///unused line is written as a FixedPulse with a width of 0.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("The pulse source of each behavior board digital output line. Each line appears on" +
+        "ce.\n\nAll three lines are required: a union has no default that survives code gen" +
+        "eration, so an\nunused line is written as a FixedPulse with a width of 0.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class PulseOutputs
+    {
+    
+        private PulseOutput _dO1;
+    
+        private PulseOutput _dO2;
+    
+        private PulseOutput _dO3;
+    
+        public PulseOutputs()
+        {
+        }
+    
+        protected PulseOutputs(PulseOutputs other)
+        {
+            _dO1 = other._dO1;
+            _dO2 = other._dO2;
+            _dO3 = other._dO3;
+        }
+    
+        /// <summary>
+        /// Pulse source for DO1.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("DO1", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="DO1")]
+        [System.ComponentModel.DescriptionAttribute("Pulse source for DO1.")]
+        public PulseOutput DO1
+        {
+            get
+            {
+                return _dO1;
+            }
+            set
+            {
+                _dO1 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Pulse source for DO2.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("DO2", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="DO2")]
+        [System.ComponentModel.DescriptionAttribute("Pulse source for DO2.")]
+        public PulseOutput DO2
+        {
+            get
+            {
+                return _dO2;
+            }
+            set
+            {
+                _dO2 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Pulse source for DO3; a FixedPulse of width 0 if unused.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("DO3", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="DO3")]
+        [System.ComponentModel.DescriptionAttribute("Pulse source for DO3; a FixedPulse of width 0 if unused.")]
+        public PulseOutput DO3
+        {
+            get
+            {
+                return _dO3;
+            }
+            set
+            {
+                _dO3 = value;
+            }
+        }
+    
+        public System.IObservable<PulseOutputs> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new PulseOutputs(this)));
+        }
+    
+        public System.IObservable<PulseOutputs> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new PulseOutputs(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("DO1 = " + _dO1 + ", ");
+            stringBuilder.Append("DO2 = " + _dO2 + ", ");
+            stringBuilder.Append("DO3 = " + _dO3);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    /// <summary>
+    /// Represents configuration parameters of the RunningWheel module.
+    ///Exposes wheel geometry parameters used to compute speed and distance from encoder counts.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("Represents configuration parameters of the RunningWheel module.\nExposes wheel geo" +
+        "metry parameters used to compute speed and distance from encoder counts.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class RunningWheel
+    {
+    
+        private int _countsPerRev;
+    
+        private double _wheelDiameterMm;
+    
+        public RunningWheel()
+        {
+        }
+    
+        protected RunningWheel(RunningWheel other)
+        {
+            _countsPerRev = other._countsPerRev;
+            _wheelDiameterMm = other._wheelDiameterMm;
+        }
+    
+        /// <summary>
+        /// Number of encoder counts per full revolution of the running wheel.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("countsPerRev", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="countsPerRev")]
+        [System.ComponentModel.DescriptionAttribute("Number of encoder counts per full revolution of the running wheel.")]
+        public int CountsPerRev
+        {
+            get
+            {
+                return _countsPerRev;
+            }
+            set
+            {
+                _countsPerRev = value;
+            }
+        }
+    
+        /// <summary>
+        /// The diameter of the running wheel, in millimetres.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("wheelDiameterMm", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="wheelDiameterMm")]
+        [System.ComponentModel.DescriptionAttribute("The diameter of the running wheel, in millimetres.")]
+        public double WheelDiameterMm
+        {
+            get
+            {
+                return _wheelDiameterMm;
+            }
+            set
+            {
+                _wheelDiameterMm = value;
+            }
+        }
+    
+        public System.IObservable<RunningWheel> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new RunningWheel(this)));
+        }
+    
+        public System.IObservable<RunningWheel> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new RunningWheel(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("CountsPerRev = " + _countsPerRev + ", ");
+            stringBuilder.Append("WheelDiameterMm = " + _wheelDiameterMm);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class SpinnakerCamera
+    {
+    
+        private double _triggerFrequency;
+    
+        private double _exposureTime;
+    
+        private string _serialNumber;
+    
+        private double _gain;
+    
+        private int _binning;
+    
+        private string _discriminatorType;
+    
+        public SpinnakerCamera()
+        {
+            _triggerFrequency = 50D;
+            _exposureTime = 15000D;
+            _serialNumber = "00000";
+            _gain = 1D;
+            _binning = 1;
+            _discriminatorType = "SpinnakerCamera";
+        }
+    
+        protected SpinnakerCamera(SpinnakerCamera other)
+        {
+            _triggerFrequency = other._triggerFrequency;
+            _exposureTime = other._exposureTime;
+            _serialNumber = other._serialNumber;
+            _gain = other._gain;
+            _binning = other._binning;
+            _discriminatorType = other._discriminatorType;
+        }
+    
+        /// <summary>
+        /// The frequency at which the camera is triggered (in Hz).
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("triggerFrequency")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="triggerFrequency")]
+        [System.ComponentModel.DescriptionAttribute("The frequency at which the camera is triggered (in Hz).")]
+        public double TriggerFrequency
+        {
+            get
+            {
+                return _triggerFrequency;
+            }
+            set
+            {
+                _triggerFrequency = value;
+            }
+        }
+    
+        /// <summary>
+        /// The exposure time for the camera (in microseconds).
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("exposureTime")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="exposureTime")]
+        [System.ComponentModel.DescriptionAttribute("The exposure time for the camera (in microseconds).")]
+        public double ExposureTime
+        {
+            get
+            {
+                return _exposureTime;
+            }
+            set
+            {
+                _exposureTime = value;
+            }
+        }
+    
+        /// <summary>
+        /// The serial number of the camera.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("serialNumber")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="serialNumber")]
+        [System.ComponentModel.DescriptionAttribute("The serial number of the camera.")]
+        public string SerialNumber
+        {
+            get
+            {
+                return _serialNumber;
+            }
+            set
+            {
+                _serialNumber = value;
+            }
+        }
+    
+        /// <summary>
+        /// The camera gain.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("gain")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="gain")]
+        [System.ComponentModel.DescriptionAttribute("The camera gain.")]
+        public double Gain
+        {
+            get
+            {
+                return _gain;
+            }
+            set
+            {
+                _gain = value;
+            }
+        }
+    
+        /// <summary>
+        /// The binning setting for the camera.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("binning")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="binning")]
+        [System.ComponentModel.DescriptionAttribute("The binning setting for the camera.")]
+        public int Binning
+        {
+            get
+            {
+                return _binning;
+            }
+            set
+            {
+                _binning = value;
+            }
+        }
+    
+        [Newtonsoft.Json.JsonPropertyAttribute("discriminatorType")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="discriminatorType")]
+        public string DiscriminatorType
+        {
+            get
+            {
+                return _discriminatorType;
+            }
+            set
+            {
+                _discriminatorType = value;
+            }
+        }
+    
+        public System.IObservable<SpinnakerCamera> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new SpinnakerCamera(this)));
+        }
+    
+        public System.IObservable<SpinnakerCamera> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new SpinnakerCamera(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("TriggerFrequency = " + _triggerFrequency + ", ");
+            stringBuilder.Append("ExposureTime = " + _exposureTime + ", ");
+            stringBuilder.Append("SerialNumber = " + _serialNumber + ", ");
+            stringBuilder.Append("Gain = " + _gain + ", ");
+            stringBuilder.Append("Binning = " + _binning + ", ");
+            stringBuilder.Append("DiscriminatorType = " + _discriminatorType);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
@@ -177,15 +1123,27 @@ namespace UclOpenCoenBehaviourBox
     
         private string _version;
     
+        private BehaviorBoard _behaviorBoard;
+    
+        private SpinnakerCamera _camera;
+    
+        private int _trackingThreshold;
+    
         public UclOpenCoenBehaviourBoxRig()
         {
             _version = "0.0.0-rc1";
+            _behaviorBoard = new BehaviorBoard();
+            _camera = new SpinnakerCamera();
+            _trackingThreshold = 35;
         }
     
         protected UclOpenCoenBehaviourBoxRig(UclOpenCoenBehaviourBoxRig other)
         {
             _rootPath = other._rootPath;
             _version = other._version;
+            _behaviorBoard = other._behaviorBoard;
+            _camera = other._camera;
+            _trackingThreshold = other._trackingThreshold;
         }
     
         /// <summary>
@@ -220,6 +1178,65 @@ namespace UclOpenCoenBehaviourBox
             }
         }
     
+        /// <summary>
+        /// The Harp Behavior board: serial port, camera trigger on Trigger0 and running wheel on encoder port 2.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("behaviorBoard", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="behaviorBoard")]
+        [System.ComponentModel.DescriptionAttribute("The Harp Behavior board: serial port, camera trigger on Trigger0 and running whee" +
+            "l on encoder port 2.")]
+        public BehaviorBoard BehaviorBoard
+        {
+            get
+            {
+                return _behaviorBoard;
+            }
+            set
+            {
+                _behaviorBoard = value;
+            }
+        }
+    
+        /// <summary>
+        /// The triggered Spinnaker camera. Its frame rate is the board's trigger0_frequency.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("camera", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="camera")]
+        [System.ComponentModel.DescriptionAttribute("The triggered Spinnaker camera. Its frame rate is the board\'s trigger0_frequency." +
+            "")]
+        public SpinnakerCamera Camera
+        {
+            get
+            {
+                return _camera;
+            }
+            set
+            {
+                _camera = value;
+            }
+        }
+    
+        /// <summary>
+        /// Pixels darker than this are treated as the mouse. Depends on the box's lighting: raise it for a lighter image or animal, lower it for a darker one.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("trackingThreshold")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="trackingThreshold")]
+        [System.ComponentModel.DescriptionAttribute("Pixels darker than this are treated as the mouse. Depends on the box\'s lighting: " +
+            "raise it for a lighter image or animal, lower it for a darker one.")]
+        public int TrackingThreshold
+        {
+            get
+            {
+                return _trackingThreshold;
+            }
+            set
+            {
+                _trackingThreshold = value;
+            }
+        }
+    
         public System.IObservable<UclOpenCoenBehaviourBoxRig> Generate()
         {
             return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new UclOpenCoenBehaviourBoxRig(this)));
@@ -233,7 +1250,10 @@ namespace UclOpenCoenBehaviourBox
         protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
         {
             stringBuilder.Append("RootPath = " + _rootPath + ", ");
-            stringBuilder.Append("Version = " + _version);
+            stringBuilder.Append("Version = " + _version + ", ");
+            stringBuilder.Append("BehaviorBoard = " + _behaviorBoard + ", ");
+            stringBuilder.Append("Camera = " + _camera + ", ");
+            stringBuilder.Append("TrackingThreshold = " + _trackingThreshold);
             return true;
         }
     
@@ -407,6 +1427,98 @@ namespace UclOpenCoenBehaviourBox
 
 
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [Newtonsoft.Json.JsonConverter(typeof(JsonInheritanceConverter), "discriminatorType")]
+    [YamlDiscriminator("discriminatorType")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class DO2
+    {
+    
+        public DO2()
+        {
+        }
+    
+        protected DO2(DO2 other)
+        {
+        }
+    
+        public System.IObservable<DO2> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new DO2(this)));
+        }
+    
+        public System.IObservable<DO2> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new DO2(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            return false;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [Newtonsoft.Json.JsonConverter(typeof(JsonInheritanceConverter), "discriminatorType")]
+    [YamlDiscriminator("discriminatorType")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class DO3
+    {
+    
+        public DO3()
+        {
+        }
+    
+        protected DO3(DO3 other)
+        {
+        }
+    
+        public System.IObservable<DO3> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new DO3(this)));
+        }
+    
+        public System.IObservable<DO3> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new DO3(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            return false;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
     public partial class Json
@@ -450,6 +1562,262 @@ namespace UclOpenCoenBehaviourBox
     }
 
 
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
+    [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Interface, AllowMultiple = true)]
+    internal class JsonInheritanceAttribute : System.Attribute
+    {
+        public JsonInheritanceAttribute(string key, System.Type type)
+        {
+            Key = key;
+            Type = type;
+        }
+
+        public string Key { get; private set; }
+
+        public System.Type Type { get; private set; }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
+    public class JsonInheritanceConverter : Newtonsoft.Json.JsonConverter
+    {
+        internal static readonly string DefaultDiscriminatorName = "discriminator";
+
+        private readonly string _discriminatorName;
+
+        [System.ThreadStatic]
+        private static bool _isReading;
+
+        [System.ThreadStatic]
+        private static bool _isWriting;
+
+        public JsonInheritanceConverter()
+        {
+            _discriminatorName = DefaultDiscriminatorName;
+        }
+
+        public JsonInheritanceConverter(string discriminatorName)
+        {
+            _discriminatorName = discriminatorName;
+        }
+
+        public string DiscriminatorName { get { return _discriminatorName; } }
+
+        public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
+        {
+            try
+            {
+                _isWriting = true;
+
+                var jObject = Newtonsoft.Json.Linq.JObject.FromObject(value, serializer);
+                jObject.AddFirst(new Newtonsoft.Json.Linq.JProperty(_discriminatorName, GetSubtypeDiscriminator(value.GetType())));
+                writer.WriteToken(jObject.CreateReader());
+            }
+            finally
+            {
+                _isWriting = false;
+            }
+        }
+
+        public override bool CanWrite
+        {
+            get
+            {
+                if (_isWriting)
+                {
+                    _isWriting = false;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        public override bool CanRead
+        {
+            get
+            {
+                if (_isReading)
+                {
+                    _isReading = false;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        public override bool CanConvert(System.Type objectType)
+        {
+            return true;
+        }
+
+        public override object ReadJson(Newtonsoft.Json.JsonReader reader, System.Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+        {
+            var jObject = serializer.Deserialize<Newtonsoft.Json.Linq.JObject>(reader);
+            if (jObject == null)
+                return null;
+
+            var discriminatorValue = jObject.GetValue(_discriminatorName);
+            var discriminator = discriminatorValue != null ? Newtonsoft.Json.Linq.Extensions.Value<string>(discriminatorValue) : null;
+            var subtype = GetObjectSubtype(objectType, discriminator);
+
+            var objectContract = serializer.ContractResolver.ResolveContract(subtype) as Newtonsoft.Json.Serialization.JsonObjectContract;
+            if (objectContract == null || System.Linq.Enumerable.All(objectContract.Properties, p => p.PropertyName != _discriminatorName))
+            {
+                jObject.Remove(_discriminatorName);
+            }
+
+            try
+            {
+                _isReading = true;
+                return serializer.Deserialize(jObject.CreateReader(), subtype);
+            }
+            finally
+            {
+                _isReading = false;
+            }
+        }
+
+        private System.Type GetObjectSubtype(System.Type objectType, string discriminator)
+        {
+            foreach (var attribute in System.Reflection.CustomAttributeExtensions.GetCustomAttributes<JsonInheritanceAttribute>(System.Reflection.IntrospectionExtensions.GetTypeInfo(objectType), true))
+            {
+                if (attribute.Key == discriminator)
+                    return attribute.Type;
+            }
+
+            return objectType;
+        }
+
+        private string GetSubtypeDiscriminator(System.Type objectType)
+        {
+            foreach (var attribute in System.Reflection.CustomAttributeExtensions.GetCustomAttributes<JsonInheritanceAttribute>(System.Reflection.IntrospectionExtensions.GetTypeInfo(objectType), true))
+            {
+                if (attribute.Type == objectType)
+                    return attribute.Key;
+            }
+
+            return objectType.Name;
+        }
+    }
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DefaultPropertyAttribute("Type")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Combinator)]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<FixedPulse>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CalibratedPulse>))]
+    public partial class MatchPulseOutput : Bonsai.Expressions.SingleArgumentExpressionBuilder
+    {
+    
+        public Bonsai.Expressions.TypeMapping Type { get; set; }
+
+        public override System.Linq.Expressions.Expression Build(System.Collections.Generic.IEnumerable<System.Linq.Expressions.Expression> arguments)
+        {
+            var typeMapping = Type;
+            var returnType = typeMapping != null ? typeMapping.GetType().GetGenericArguments()[0] : typeof(PulseOutput);
+            return System.Linq.Expressions.Expression.Call(
+                typeof(MatchPulseOutput),
+                "Process",
+                new System.Type[] { returnType },
+                System.Linq.Enumerable.Single(arguments));
+        }
+
+    
+        private static System.IObservable<TResult> Process<TResult>(System.IObservable<PulseOutput> source)
+            where TResult : PulseOutput
+        {
+            return System.Reactive.Linq.Observable.Create<TResult>(observer =>
+            {
+                var sourceObserver = System.Reactive.Observer.Create<PulseOutput>(
+                    value =>
+                    {
+                        var match = value as TResult;
+                        if (match != null) observer.OnNext(match);
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
+                return System.ObservableExtensions.SubscribeSafe(source, sourceObserver);
+            });
+        }
+    }
+
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DefaultPropertyAttribute("Type")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Combinator)]
+    public partial class MatchDO2 : Bonsai.Expressions.SingleArgumentExpressionBuilder
+    {
+    
+        public Bonsai.Expressions.TypeMapping Type { get; set; }
+
+        public override System.Linq.Expressions.Expression Build(System.Collections.Generic.IEnumerable<System.Linq.Expressions.Expression> arguments)
+        {
+            var typeMapping = Type;
+            var returnType = typeMapping != null ? typeMapping.GetType().GetGenericArguments()[0] : typeof(DO2);
+            return System.Linq.Expressions.Expression.Call(
+                typeof(MatchDO2),
+                "Process",
+                new System.Type[] { returnType },
+                System.Linq.Enumerable.Single(arguments));
+        }
+
+    
+        private static System.IObservable<TResult> Process<TResult>(System.IObservable<DO2> source)
+            where TResult : DO2
+        {
+            return System.Reactive.Linq.Observable.Create<TResult>(observer =>
+            {
+                var sourceObserver = System.Reactive.Observer.Create<DO2>(
+                    value =>
+                    {
+                        var match = value as TResult;
+                        if (match != null) observer.OnNext(match);
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
+                return System.ObservableExtensions.SubscribeSafe(source, sourceObserver);
+            });
+        }
+    }
+
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DefaultPropertyAttribute("Type")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Combinator)]
+    public partial class MatchDO3 : Bonsai.Expressions.SingleArgumentExpressionBuilder
+    {
+    
+        public Bonsai.Expressions.TypeMapping Type { get; set; }
+
+        public override System.Linq.Expressions.Expression Build(System.Collections.Generic.IEnumerable<System.Linq.Expressions.Expression> arguments)
+        {
+            var typeMapping = Type;
+            var returnType = typeMapping != null ? typeMapping.GetType().GetGenericArguments()[0] : typeof(DO3);
+            return System.Linq.Expressions.Expression.Call(
+                typeof(MatchDO3),
+                "Process",
+                new System.Type[] { returnType },
+                System.Linq.Enumerable.Single(arguments));
+        }
+
+    
+        private static System.IObservable<TResult> Process<TResult>(System.IObservable<DO3> source)
+            where TResult : DO3
+        {
+            return System.Reactive.Linq.Observable.Create<TResult>(observer =>
+            {
+                var sourceObserver = System.Reactive.Observer.Create<DO3>(
+                    value =>
+                    {
+                        var match = value as TResult;
+                        if (match != null) observer.OnNext(match);
+                    },
+                    observer.OnError,
+                    observer.OnCompleted);
+                return System.ObservableExtensions.SubscribeSafe(source, sourceObserver);
+            });
+        }
+    }
+
+
     /// <summary>
     /// Serializes a sequence of data model objects into JSON strings.
     /// </summary>
@@ -468,9 +1836,54 @@ namespace UclOpenCoenBehaviourBox
             return System.Reactive.Linq.Observable.Select(source, value => Newtonsoft.Json.JsonConvert.SerializeObject(value, formatting));
         }
 
+        public System.IObservable<string> Process(System.IObservable<BehaviorBoard> source)
+        {
+            return Process<BehaviorBoard>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<CalibratedPulse> source)
+        {
+            return Process<CalibratedPulse>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<CameraTriggerController> source)
+        {
+            return Process<CameraTriggerController>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<ExperimentSession> source)
         {
             return Process<ExperimentSession>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<FixedPulse> source)
+        {
+            return Process<FixedPulse>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<PulseController> source)
+        {
+            return Process<PulseController>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<PulseOutput> source)
+        {
+            return Process<PulseOutput>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<PulseOutputs> source)
+        {
+            return Process<PulseOutputs>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<RunningWheel> source)
+        {
+            return Process<RunningWheel>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<SpinnakerCamera> source)
+        {
+            return Process<SpinnakerCamera>(source);
         }
 
         public System.IObservable<string> Process(System.IObservable<UclOpenCoenBehaviourBoxRig> source)
@@ -488,6 +1901,16 @@ namespace UclOpenCoenBehaviourBox
             return Process<UclOpenCoenBehaviourBoxTaskParameters>(source);
         }
 
+        public System.IObservable<string> Process(System.IObservable<DO2> source)
+        {
+            return Process<DO2>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<DO3> source)
+        {
+            return Process<DO3>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<Json> source)
         {
             return Process<Json>(source);
@@ -502,10 +1925,21 @@ namespace UclOpenCoenBehaviourBox
     [System.ComponentModel.DescriptionAttribute("Deserializes a sequence of JSON strings into data model objects.")]
     [System.ComponentModel.DefaultPropertyAttribute("Type")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Transform)]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<BehaviorBoard>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CalibratedPulse>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CameraTriggerController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<ExperimentSession>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<FixedPulse>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseController>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutput>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutputs>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<RunningWheel>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<SpinnakerCamera>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxRig>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskLogic>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskParameters>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<DO2>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<DO3>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<Json>))]
     public partial class DeserializeFromJson : Bonsai.Expressions.SingleArgumentExpressionBuilder
     {
@@ -535,6 +1969,116 @@ namespace UclOpenCoenBehaviourBox
     }
 
 
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.AttributeUsageAttribute((System.AttributeTargets.Class | System.AttributeTargets.Interface))]
+    public class YamlDiscriminatorAttribute : System.Attribute
+    {
+    
+        public YamlDiscriminatorAttribute(string discriminator)
+        {
+            Discriminator = discriminator;
+        }
+
+        public string Discriminator { get; private set; }
+
+    }
+
+
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    public class YamlDiscriminatorTypeInspector : YamlDotNet.Serialization.TypeInspectors.ReflectionTypeInspector
+    {
+    
+        readonly YamlDotNet.Serialization.ITypeInspector innerTypeDescriptor;
+
+        public YamlDiscriminatorTypeInspector(YamlDotNet.Serialization.ITypeInspector innerTypeDescriptor)
+        {
+            if (innerTypeDescriptor == null)
+            {
+                throw new System.ArgumentNullException("innerTypeDescriptor");
+            }
+
+            this.innerTypeDescriptor = innerTypeDescriptor;
+        }
+
+        public override System.Collections.Generic.IEnumerable<YamlDotNet.Serialization.IPropertyDescriptor> GetProperties(System.Type type, object container)
+        {
+            var innerProperties = innerTypeDescriptor.GetProperties(type, container);
+
+            var discriminatorAttribute = (YamlDiscriminatorAttribute)System.Attribute.GetCustomAttribute(type, typeof(YamlDiscriminatorAttribute));
+            var inheritanceAttributes = (JsonInheritanceAttribute[])System.Attribute.GetCustomAttributes(type, typeof(JsonInheritanceAttribute));
+            var typeMatch = System.Array.Find(inheritanceAttributes, attribute => attribute.Type == type);
+            if (discriminatorAttribute != null && typeMatch != null)
+            {
+                return System.Linq.Enumerable.Concat(new[]
+                {
+                    new DiscriminatorPropertyDescriptor(discriminatorAttribute.Discriminator, typeMatch.Key)
+                }, innerProperties);
+            }
+
+            return innerProperties;
+        }
+
+        class DiscriminatorPropertyDescriptor : YamlDotNet.Serialization.IPropertyDescriptor
+        {
+            readonly string key;
+
+            public DiscriminatorPropertyDescriptor(string discriminator, string value)
+            {
+                ScalarStyle = YamlDotNet.Core.ScalarStyle.Plain;
+                Name = discriminator;
+                key = value;
+            }
+
+            public string Name { get; private set; }
+
+            public bool Required
+            {
+                get { return true; }
+            }
+
+            public bool CanWrite
+            {
+                get { return true; }
+            }
+
+            public System.Type Type
+            {
+                get { return typeof(string); }
+            }
+
+            public System.Type TypeOverride { get; set; }
+
+            public System.Type ConverterType
+            {
+                get { return null; }
+            }
+
+            public bool AllowNulls
+            {
+                get { return false; }
+            }
+
+            public int Order { get; set; }
+
+            public YamlDotNet.Core.ScalarStyle ScalarStyle { get; set; }
+
+            public T GetCustomAttribute<T>() where T : System.Attribute
+            {
+                return null;
+            }
+
+            public YamlDotNet.Serialization.IObjectDescriptor Read(object target)
+            {
+                return new YamlDotNet.Serialization.ObjectDescriptor(key, Type, Type, ScalarStyle);
+            }
+
+            public void Write(object target, object value)
+            {
+            }
+        }
+    }
+
+
     /// <summary>
     /// Serializes a sequence of data model objects into YAML strings.
     /// </summary>
@@ -550,15 +2094,61 @@ namespace UclOpenCoenBehaviourBox
             return System.Reactive.Linq.Observable.Defer(() =>
             {
                 var serializer = new YamlDotNet.Serialization.SerializerBuilder()
+                    .WithTypeInspector(inspector => new YamlDiscriminatorTypeInspector(inspector))
                       .WithTypeConverter(new YamlDotNet.Serialization.Converters.DateTimeOffsetConverter())
                       .Build();
                 return System.Reactive.Linq.Observable.Select(source, value => serializer.Serialize(value)); 
             });
         }
 
+        public System.IObservable<string> Process(System.IObservable<BehaviorBoard> source)
+        {
+            return Process<BehaviorBoard>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<CalibratedPulse> source)
+        {
+            return Process<CalibratedPulse>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<CameraTriggerController> source)
+        {
+            return Process<CameraTriggerController>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<ExperimentSession> source)
         {
             return Process<ExperimentSession>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<FixedPulse> source)
+        {
+            return Process<FixedPulse>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<PulseController> source)
+        {
+            return Process<PulseController>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<PulseOutput> source)
+        {
+            return Process<PulseOutput>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<PulseOutputs> source)
+        {
+            return Process<PulseOutputs>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<RunningWheel> source)
+        {
+            return Process<RunningWheel>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<SpinnakerCamera> source)
+        {
+            return Process<SpinnakerCamera>(source);
         }
 
         public System.IObservable<string> Process(System.IObservable<UclOpenCoenBehaviourBoxRig> source)
@@ -576,6 +2166,16 @@ namespace UclOpenCoenBehaviourBox
             return Process<UclOpenCoenBehaviourBoxTaskParameters>(source);
         }
 
+        public System.IObservable<string> Process(System.IObservable<DO2> source)
+        {
+            return Process<DO2>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<DO3> source)
+        {
+            return Process<DO3>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<Json> source)
         {
             return Process<Json>(source);
@@ -590,10 +2190,21 @@ namespace UclOpenCoenBehaviourBox
     [System.ComponentModel.DescriptionAttribute("Deserializes a sequence of YAML strings into data model objects.")]
     [System.ComponentModel.DefaultPropertyAttribute("Type")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Transform)]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<BehaviorBoard>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CalibratedPulse>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CameraTriggerController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<ExperimentSession>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<FixedPulse>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseController>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutput>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutputs>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<RunningWheel>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<SpinnakerCamera>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxRig>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskLogic>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskParameters>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<DO2>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<DO3>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<Json>))]
     public partial class DeserializeFromYaml : Bonsai.Expressions.SingleArgumentExpressionBuilder
     {
@@ -616,11 +2227,29 @@ namespace UclOpenCoenBehaviourBox
                 System.Linq.Enumerable.Single(arguments));
         }
 
+        private static void AddTypeDiscriminator<T>(YamlDotNet.Serialization.BufferedDeserialization.ITypeDiscriminatingNodeDeserializerOptions o)
+        {
+            var baseType = typeof(T);
+            var discriminator = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<YamlDiscriminatorAttribute>(baseType).Discriminator;
+            var typeMapping = System.Linq.Enumerable.ToDictionary(
+                System.Reflection.CustomAttributeExtensions.GetCustomAttributes<JsonInheritanceAttribute>(baseType),
+                attr => attr.Key,
+                attr => attr.Type);
+            o.AddKeyValueTypeDiscriminator<T>(discriminator, typeMapping);
+        }
+
         private static System.IObservable<T> Process<T>(System.IObservable<string> source)
         {
             return System.Reactive.Linq.Observable.Defer(() =>
             {
                 var serializer = new YamlDotNet.Serialization.DeserializerBuilder()
+                    .WithTypeInspector(inspector => new YamlDiscriminatorTypeInspector(inspector))
+                    .WithTypeDiscriminatingNodeDeserializer(o =>
+                    {
+                        AddTypeDiscriminator<PulseOutput>(o);
+                        AddTypeDiscriminator<DO2>(o);
+                        AddTypeDiscriminator<DO3>(o);
+                    })
                       .WithTypeConverter(new YamlDotNet.Serialization.Converters.DateTimeOffsetConverter())
                       .Build();
                 return System.Reactive.Linq.Observable.Select(source, value =>

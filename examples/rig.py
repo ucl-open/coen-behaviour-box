@@ -1,6 +1,8 @@
 from pathlib import Path
 
 from open_rigs.core import yaml
+from open_rigs.devices.behavior_board import BehaviorBoard, CameraTriggerController, RunningWheel
+from open_rigs.video import SpinnakerCamera
 
 from ucl_open_coen_behaviour_box.rig import (
     UclOpenCoenBehaviourBoxRig
@@ -14,9 +16,18 @@ HEADER = """\
 # exist yet; fill in the copy there. Per-rig values are never committed.
 """
 
-# Placeholder values only: they must look wrong until a rig fills them in.
+# Placeholder values only: they must look wrong until a rig fills them in. The trigger rate,
+# encoder resolution and wheel size are the box's design values; a rig changes them only if its
+# hardware differs.
 rig = UclOpenCoenBehaviourBoxRig(
     root_path="C:\\Data\\CHANGE-ME",
+    behavior_board=BehaviorBoard(
+        port_name="COM-CHANGE-ME",
+        camera_trigger_controller=CameraTriggerController(trigger0_frequency=50, trigger1_frequency=50),
+        running_wheel=RunningWheel(counts_per_rev=4096, wheel_diameter_mm=150),
+    ),
+    camera=SpinnakerCamera(serial_number="CHANGE-ME", exposure_time=10000, gain=5, binning=1, trigger_frequency=50),
+    tracking_threshold=35,
 )
 
 

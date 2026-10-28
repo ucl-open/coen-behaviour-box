@@ -1,5 +1,150 @@
 {
   "$defs": {
+    "BehaviorBoard": {
+      "description": "Represents a Harp Behavior Board device.",
+      "properties": {
+        "portName": {
+          "description": "The name of the device serial port.",
+          "examples": [
+            "COM"
+          ],
+          "title": "PortName",
+          "type": "string"
+        },
+        "pulseController": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PulseController"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional PulseController module for generating digital output pulses.",
+          "title": "PulseController"
+        },
+        "cameraTriggerController": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CameraTriggerController"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional CameraTriggerController module for emitting camera trigger pulses.",
+          "title": "CameraTriggerController"
+        },
+        "runningWheel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunningWheel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional RunningWheelModule module to define wheel geometry.",
+          "title": "RunningWheel"
+        }
+      },
+      "required": [
+        "portName"
+      ],
+      "title": "BehaviorBoard",
+      "type": "object"
+    },
+    "CalibratedPulse": {
+      "description": "A pulsed output whose width comes from a calibration curve at run time, such as a reward valve.",
+      "properties": {
+        "artefact": {
+          "description": "Relative path of the CalibrationCurve that converts the requested quantity to a pulse width: a file written by the platform's DispenseCalibration procedure into this machine's calibration folder.",
+          "examples": [
+            "calibration/valve-DO1.json"
+          ],
+          "title": "Artefact",
+          "type": "string",
+          "x-rig-artefact": true
+        },
+        "fit": {
+          "$ref": "#/$defs/CalibrationModel",
+          "default": "LinearFit",
+          "description": "How the rig fits the artefact's points at startup. LinearFit suits repeated weighings.",
+          "title": "Fit"
+        },
+        "maxAgeDays": {
+          "default": 90,
+          "description": "Warn at startup when the artefact is older than this many days. 0 disables the check.",
+          "minimum": 0,
+          "title": "MaxAgeDays",
+          "type": "integer"
+        },
+        "discriminatorType": {
+          "const": "CalibratedPulse",
+          "default": "CalibratedPulse",
+          "title": "DiscriminatorType",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artefact"
+      ],
+      "title": "CalibratedPulse",
+      "type": "object"
+    },
+    "CalibrationModel": {
+      "description": "How a calibration curve is derived from its points; the `OpenRigs.Core.CalibrationModel` operators' enum.",
+      "enum": [
+        "LinearFit",
+        "PolynomialFit",
+        "Linear",
+        "CubicSpline",
+        "Step"
+      ],
+      "title": "CalibrationModel",
+      "type": "string",
+      "x-sgen-typename": "OpenRigs.Core.CalibrationModel"
+    },
+    "CameraTriggerController": {
+      "description": "Represents a CameraTriggerController module on a BehaviorBoard device.",
+      "properties": {
+        "trigger0Frequency": {
+          "description": "The frequency, in Hz, at which to emit camera triggers on Trigger0 (DO0, CameraOutput0)",
+          "examples": [
+            "50"
+          ],
+          "title": "Trigger0Frequency",
+          "type": "integer"
+        },
+        "trigger1Frequency": {
+          "description": "The frequency, in Hz, at which to emit camera triggers on Trigger1 (DO1, CameraOutput1)",
+          "examples": [
+            "50"
+          ],
+          "title": "Trigger1Frequency",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "trigger0Frequency",
+        "trigger1Frequency"
+      ],
+      "title": "CameraTriggerController",
+      "type": "object"
+    },
+    "DigitalOutputs": {
+      "allOf": [
+        {
+          "type": "string"
+        }
+      ],
+      "description": "A set of behavior board digital output lines, written comma separated.",
+      "title": "DigitalOutputs",
+      "x-sgen-typename": "Harp.Behavior.DigitalOutputs"
+    },
     "ExperimentSession": {
       "description": "The base class for creating open-rigs experiment models.",
       "properties": {
@@ -39,6 +184,166 @@
       "title": "ExperimentSession",
       "type": "object"
     },
+    "FixedPulse": {
+      "description": "A pulsed output whose width is set in the rig configuration, such as an LED, an air puff or a TTL.",
+      "properties": {
+        "pulseWidthMs": {
+          "description": "Pulse duration, in milliseconds.",
+          "maximum": 65535,
+          "minimum": 0,
+          "title": "PulseWidthMs",
+          "type": "integer"
+        },
+        "discriminatorType": {
+          "const": "FixedPulse",
+          "default": "FixedPulse",
+          "title": "DiscriminatorType",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pulseWidthMs"
+      ],
+      "title": "FixedPulse",
+      "type": "object"
+    },
+    "PulseController": {
+      "description": "Represents the PulseController module on the BehaviorBoard.",
+      "properties": {
+        "outputPulseEnable": {
+          "$ref": "#/$defs/DigitalOutputs",
+          "default": "DO1, DO2, DO3",
+          "description": "Digital output lines enabled for pulse generation, comma separated.",
+          "title": "OutputPulseEnable"
+        },
+        "outputs": {
+          "$ref": "#/$defs/PulseOutputs",
+          "description": "Pulse source of each digital output line.",
+          "title": "Outputs"
+        }
+      },
+      "required": [
+        "outputs"
+      ],
+      "title": "PulseController",
+      "type": "object"
+    },
+    "PulseOutput": {
+      "description": "What drives the pulse width of one digital output line: a fixed width or a calibration curve.",
+      "discriminator": {
+        "mapping": {
+          "CalibratedPulse": "#/$defs/CalibratedPulse",
+          "FixedPulse": "#/$defs/FixedPulse"
+        },
+        "propertyName": "discriminatorType"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/FixedPulse"
+        },
+        {
+          "$ref": "#/$defs/CalibratedPulse"
+        }
+      ],
+      "title": "PulseOutput"
+    },
+    "PulseOutputs": {
+      "description": "The pulse source of each behavior board digital output line. Each line appears once.\n\nAll three lines are required: a union has no default that survives code generation, so an\nunused line is written as a FixedPulse with a width of 0.",
+      "properties": {
+        "DO1": {
+          "$ref": "#/$defs/PulseOutput",
+          "description": "Pulse source for DO1.",
+          "title": "Do1"
+        },
+        "DO2": {
+          "$ref": "#/$defs/PulseOutput",
+          "description": "Pulse source for DO2.",
+          "title": "Do2"
+        },
+        "DO3": {
+          "$ref": "#/$defs/PulseOutput",
+          "description": "Pulse source for DO3; a FixedPulse of width 0 if unused.",
+          "title": "Do3"
+        }
+      },
+      "required": [
+        "DO1",
+        "DO2",
+        "DO3"
+      ],
+      "title": "PulseOutputs",
+      "type": "object"
+    },
+    "RunningWheel": {
+      "description": "Represents configuration parameters of the RunningWheel module.\nExposes wheel geometry parameters used to compute speed and distance from encoder counts.",
+      "properties": {
+        "countsPerRev": {
+          "description": "Number of encoder counts per full revolution of the running wheel.",
+          "title": "CountsPerRev",
+          "type": "integer"
+        },
+        "wheelDiameterMm": {
+          "description": "The diameter of the running wheel, in millimetres.",
+          "title": "WheelDiameterMm",
+          "type": "number"
+        }
+      },
+      "required": [
+        "countsPerRev",
+        "wheelDiameterMm"
+      ],
+      "title": "RunningWheel",
+      "type": "object"
+    },
+    "SpinnakerCamera": {
+      "properties": {
+        "triggerFrequency": {
+          "default": 50,
+          "description": "The frequency at which the camera is triggered (in Hz).",
+          "minimum": 1,
+          "title": "TriggerFrequency",
+          "type": "number"
+        },
+        "exposureTime": {
+          "default": 15000,
+          "description": "The exposure time for the camera (in microseconds).",
+          "minimum": 0,
+          "title": "ExposureTime",
+          "type": "number"
+        },
+        "serialNumber": {
+          "default": "00000",
+          "description": "The serial number of the camera.",
+          "title": "SerialNumber",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gain": {
+          "default": 1,
+          "description": "The camera gain.",
+          "minimum": 0,
+          "title": "Gain",
+          "type": "number"
+        },
+        "binning": {
+          "default": 1,
+          "description": "The binning setting for the camera.",
+          "minimum": 1,
+          "title": "Binning",
+          "type": "integer"
+        },
+        "discriminatorType": {
+          "const": "SpinnakerCamera",
+          "default": "SpinnakerCamera",
+          "title": "DiscriminatorType",
+          "type": "string"
+        }
+      },
+      "title": "SpinnakerCamera",
+      "type": "object"
+    },
     "UclOpenCoenBehaviourBoxRig": {
       "properties": {
         "rootPath": {
@@ -51,10 +356,29 @@
           "default": "0.0.0-rc1",
           "title": "Version",
           "type": "string"
+        },
+        "behaviorBoard": {
+          "$ref": "#/$defs/BehaviorBoard",
+          "description": "The Harp Behavior board: serial port, camera trigger on Trigger0 and running wheel on encoder port 2."
+        },
+        "camera": {
+          "$ref": "#/$defs/SpinnakerCamera",
+          "description": "The triggered Spinnaker camera. Its frame rate is the board's trigger0_frequency.",
+          "title": "Camera"
+        },
+        "trackingThreshold": {
+          "default": 35,
+          "description": "Pixels darker than this are treated as the mouse. Depends on the box's lighting: raise it for a lighter image or animal, lower it for a darker one.",
+          "maximum": 255,
+          "minimum": 0,
+          "title": "TrackingThreshold",
+          "type": "integer"
         }
       },
       "required": [
-        "rootPath"
+        "rootPath",
+        "behaviorBoard",
+        "camera"
       ],
       "title": "UclOpenCoenBehaviourBoxRig",
       "type": "object"

@@ -69,3 +69,17 @@ if (Test-Path -Path $rigConfig) {
 
 Write-Output "Creating a Bonsai environment and installing packages..."
 &.\.bonsai\Setup.cmd
+
+# The video is encoded by ffmpeg.exe, which Bonsai.FFmpeg starts from PATH, on Intel Quick Sync
+# (h264_qsv). Without it, recording stops as soon as Start recording is pressed.
+$ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+if (-not $ffmpeg) {
+    Write-Warning "FFmpeg was not found on PATH. Install it with: winget install --id Gyan.FFmpeg -e, then open a new window."
+} else {
+    & $ffmpeg.Source -v error -f lavfi -i color=black:s=320x240 -frames:v 1 -c:v h264_qsv -f null - 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Output "FFmpeg found, Intel Quick Sync encoding works."
+    } else {
+        Write-Warning "FFmpeg is installed, but Intel Quick Sync (h264_qsv) does not work on this machine."
+    }
+}
