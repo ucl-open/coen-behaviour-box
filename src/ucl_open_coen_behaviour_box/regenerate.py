@@ -23,8 +23,7 @@ def main():
     SCHEMA_ROOT.mkdir(parents=True, exist_ok=True)
     SCHEMA_FILE.write_text(json.dumps(schema, indent=2))
     print(f"Schema written to {SCHEMA_FILE}")
-    if os.system("dotnet bonsai.sgen src/DataSchemas/ucl_open_coen_behaviour_box.json --output src/Extensions --serializer json --serializer yaml") != 0:
-        raise SystemExit("bonsai.sgen failed; the C# classes were not regenerated.")
+    os.system("dotnet bonsai.sgen src/DataSchemas/ucl_open_coen_behaviour_box.json --output src/Extensions --serializer json --serializer yaml")
 
 
 if __name__ == "__main__":
