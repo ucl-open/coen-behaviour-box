@@ -25,6 +25,10 @@ Found while building this workflow on 28 Oct 2026. Open each with the line `*Com
 - Move `copier.yml` handling to upstream once roadmap#38's fix lands, then `copier update` from `gh:open-rigs/open-rigs`.
 - Re-pin `open-rigs` in `pyproject.toml` once `rig-config-resolver` is merged. The current `rev` is a commit on that unmerged branch, which can become unfetchable if the branch is squash-merged and deleted.
 
+## rig-setup
+
+- **Back up `rig.yml` to the share.** Decided 28 Oct 2026: `C:\RigConfigs\<MACHINE>\rig.yml` on the rig is the master and is edited there; rig-setup copies it one way up to `K:\config\<MACHINE>\` with a last-synced time, as it does `Health.json`. The workflow reads only the local file, so a rig runs while the server is down. Not server-to-rig, because `config/` on the share is writable by rigs only (`2750 svc-rig:lab-tonic`), and not a two-way mirror. Copy to a temporary name and rename, and never touch the local file from the sync. Also: set up the clone (`deploy.cmd`) when rig-setup first clones it.
+
 ## Audit 28 Oct 2026: not changed
 
 Raised by the independent audit and kept as they are; do not raise again without new information.
