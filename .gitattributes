@@ -1,2 +1,9 @@
 # Keep patches byte-for-byte so git apply works on any checkout
 *.patch -text
+
+# deploy.ps1 regenerates these on every machine. Check them out with the line endings their
+# generator writes (bonsai.sgen LF, Python text mode CRLF), so a deploy leaves the clone clean
+# whatever core.autocrlf is set to.
+src/Extensions/*.Generated.cs text eol=lf
+src/DataSchemas/*.json text eol=crlf
+config/rig-template.yml text eol=crlf

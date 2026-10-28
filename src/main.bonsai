@@ -5,6 +5,8 @@
                  xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
                  xmlns:beh="clr-namespace:Harp.Behavior;assembly=Harp.Behavior"
                  xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
+                 xmlns:dsp="clr-namespace:Bonsai.Dsp;assembly=Bonsai.Dsp"
+                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns:ffm="clr-namespace:Bonsai.FFmpeg;assembly=Bonsai.FFmpeg"
@@ -95,7 +97,7 @@
       <Expression xsi:type="gui:GroupBoxBuilder">
         <gui:Enabled>true</gui:Enabled>
         <gui:Visible>true</gui:Visible>
-        <gui:Text>Run length (minutes)</gui:Text>
+        <gui:Text>Run length (whole minutes)</gui:Text>
       </Expression>
       <Expression xsi:type="VisualizerMapping" />
       <Expression xsi:type="gui:ButtonBuilder">
@@ -125,14 +127,15 @@
         <Selector>Item2</Selector>
       </Expression>
       <Expression xsi:type="rx:Condition">
-        <Name>SubjectAndSessionGiven</Name>
+        <Name>RunSettingsValid</Name>
+        <Description>Subject and session given, and the run length a whole number of minutes from 1 to 9999. Anything else is refused, so Start recording does nothing.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="WorkflowInput">
               <Name>Source1</Name>
             </Expression>
             <Expression xsi:type="scr:ExpressionTransform">
-              <scr:Expression>Item1.Trim().Length &gt; 0 &amp;&amp; Item2.Trim().Length &gt; 0</scr:Expression>
+              <scr:Expression>Item1.Trim().Length &gt; 0 &amp;&amp; Item2.Trim().Length &gt; 0 &amp;&amp; Item3.Trim().Length &gt; 0 &amp;&amp; Item3.Trim().Length &lt; 5 &amp;&amp; Item3.Trim().Trim("0123456789".ToCharArray()).Length == 0 &amp;&amp; Convert.ToInt32(Item3.Trim()) &gt; 0</scr:Expression>
             </Expression>
             <Expression xsi:type="WorkflowOutput" />
           </Nodes>
@@ -164,7 +167,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>BehaviorBoard</Name>
-        <Description>Harp Behavior board, running wheel (encoder port 2) and the camera trigger on Trigger0, all from OpenRigs.Devices. Triggers start 5 s after Start recording, so the camera is armed first.</Description>
+        <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel on encoder port 2 (inline, in Position mode). Triggers start 5 s after Start recording, so the camera is armed first.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -181,12 +184,156 @@
               <Property Name="CountsPerRev" />
               <Property Name="WheelDiameterMm" />
             </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.RunningWheel.bonsai">
-              <CommandsSubjectName>BehaviorCommands</CommandsSubjectName>
-              <EventsSubjectName>BehaviorEvents</EventsSubjectName>
-              <CountsPerRev>4096</CountsPerRev>
-              <WheelDiameterMm>150</WheelDiameterMm>
-              <WheelDistanceSubjectName>WheelDistanceCm</WheelDistanceSubjectName>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>RunningWheel</Name>
+              <Description>Inline copy of the OpenRigs.Devices RunningWheel include set to Position, as av-dome does. The include sets Displacement, where the board reports the change in each 2 ms sample, and then differences and accumulates it, which yields a speed sample rather than a distance. Distance is accumulated from Bonsai start.</Description>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="beh:CreateMessage">
+                    <harp:MessageType>Write</harp:MessageType>
+                    <harp:Payload xsi:type="beh:CreateEnableEncodersPayload">
+                      <beh:EnableEncoders>EncoderPort2</beh:EnableEncoders>
+                    </harp:Payload>
+                  </Expression>
+                  <Expression xsi:type="beh:CreateMessage">
+                    <harp:MessageType>Write</harp:MessageType>
+                    <harp:Payload xsi:type="beh:CreateEncoderModePayload">
+                      <beh:EncoderMode>Position</beh:EncoderMode>
+                    </harp:Payload>
+                  </Expression>
+                  <Expression xsi:type="beh:CreateMessage">
+                    <harp:MessageType>Write</harp:MessageType>
+                    <harp:Payload xsi:type="beh:CreateEncoderResetPayload">
+                      <beh:EncoderReset>EncoderPort2</beh:EncoderReset>
+                    </harp:Payload>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Merge" />
+                  </Expression>
+                  <Expression xsi:type="ExternalizedMapping">
+                    <Property Name="Name" DisplayName="CommandsSubjectName" Description="The name of the Subject that carries command messages for a specific behavior device" Category="Subjects" />
+                  </Expression>
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>BehaviorCommands</Name>
+                  </Expression>
+                  <Expression xsi:type="ExternalizedMapping">
+                    <Property Name="Name" DisplayName="EventsSubjectName" Description="The name of the Subject that carries event messages from a specific behavior device" Category="Subjects" />
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>BehaviorEvents</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:SubscribeWhen" />
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>BehaviorEvents</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:DelaySubscription">
+                      <rx:DueTime>PT0.1S</rx:DueTime>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="beh:Parse">
+                    <harp:Register xsi:type="beh:AnalogData" />
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Encoder</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="dsp:Difference">
+                      <dsp:Order>1</dsp:Order>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Name>ConvertSigned</scr:Name>
+                    <scr:Expression>it &gt; 32768.0 ? it - 65536.0 : (it &lt; -32768.0 ? it + 65536.0 : it)</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="rx:Accumulate" />
+                  <Expression xsi:type="ExternalizedMapping">
+                    <Property Name="CountsPerRev" />
+                    <Property Name="WheelDiameterMm" />
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>TicksToCentimeters</Name>
+                    <Description>Converts steps on a quadrature encoder to a distance in cm, published to a Subject</Description>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="ExternalizedMapping">
+                          <Property Name="Value" DisplayName="CountsPerRev" Description="The number of steps recorded on the quadrature encoder in a full revolution" Category="Running Wheel" />
+                        </Expression>
+                        <Expression xsi:type="Divide">
+                          <Operand xsi:type="WorkflowProperty" TypeArguments="sys:Int16">
+                            <Value>4096</Value>
+                          </Operand>
+                        </Expression>
+                        <Expression xsi:type="ExternalizedMapping">
+                          <Property Name="Value" DisplayName="WheelDiameterMm" Description="The diameter of the wheel, in millimetres" Category="Running Wheel" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="IntProperty">
+                            <Value>150</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="scr:ExpressionTransform">
+                          <scr:Name>CircumferenceCm</scr:Name>
+                          <scr:Expression>(it*Math.Pi)/10</scr:Expression>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="Value" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Multiply">
+                          <Operand xsi:type="FloatProperty">
+                            <Value>47.12389</Value>
+                          </Operand>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source2" />
+                        <Edge From="1" To="2" Label="Source3" />
+                        <Edge From="2" To="7" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source2" />
+                        <Edge From="7" To="8" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="ExternalizedMapping">
+                    <Property Name="Name" DisplayName="WheelDistanceSubjectName" Description="The name of the Subject that carries the wheel distance in cm" Category="Subjects" />
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>WheelDistanceCm</Name>
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="3" Label="Source1" />
+                  <Edge From="1" To="3" Label="Source2" />
+                  <Edge From="2" To="3" Label="Source3" />
+                  <Edge From="3" To="5" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source2" />
+                  <Edge From="5" To="8" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="6" To="9" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source2" />
+                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="11" To="12" Label="Source1" />
+                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="13" To="14" Label="Source1" />
+                  <Edge From="14" To="15" Label="Source1" />
+                  <Edge From="15" To="17" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source2" />
+                  <Edge From="17" To="19" Label="Source1" />
+                  <Edge From="18" To="19" Label="Source2" />
+                </Edges>
+              </Workflow>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="Trigger0Frequency" />
@@ -617,6 +764,28 @@
       <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:LogHarpDevice.bonsai">
         <LogName>BehaviorBoard</LogName>
       </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>PathPrefix</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Delay">
+          <rx:DueTime>PT0.5S</rx:DueTime>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="harp:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="harp:CreateOperationControlPayload">
+          <harp:OperationMode>Active</harp:OperationMode>
+          <harp:DumpRegisters>true</harp:DumpRegisters>
+          <harp:MuteReplies>false</harp:MuteReplies>
+          <harp:VisualIndicators>Off</harp:VisualIndicators>
+          <harp:OperationLed>Off</harp:OperationLed>
+          <harp:Heartbeat>Enabled</harp:Heartbeat>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>BehaviorCommands</Name>
+      </Expression>
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
@@ -664,6 +833,9 @@
       <Edge From="46" To="48" Label="Source1" />
       <Edge From="47" To="48" Label="Source2" />
       <Edge From="48" To="49" Label="Source1" />
+      <Edge From="50" To="51" Label="Source1" />
+      <Edge From="51" To="52" Label="Source1" />
+      <Edge From="52" To="53" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>

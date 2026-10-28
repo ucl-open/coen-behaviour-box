@@ -9,7 +9,7 @@ Patches applied on top, both reported upstream:
 | Patch | Fixes | Upstream |
 |---|---|---|
 | `open-rigs-66-full-frame.patch` | `TriggeredSpinnaker` records a cropped frame when the camera's stored region is smaller than the sensor: the region is reset to full frame after binning | ucl-open/ucl-open#66 |
-| `open-rigs-67-copy-chunkdata.patch` | Bonsai crashes when a frame waits in the Zip, because `ChunkData` is read after Spinnaker releases the image: the five chunk fields are copied inside the camera callback | ucl-open/ucl-open#67 |
+| `open-rigs-67-copy-chunkdata.patch` | Bonsai crashes when a frame waits in the Zip, because `ChunkData` is read after Spinnaker releases the image: the five chunk fields are copied inside the camera callback. This changes only the `OpenRigs.Devices` `TriggeredSpinnaker` include, which this workflow does not use; the `OpenRigs.Video.TriggeredSpinnaker` operator it uses already copies `FrameID` and `Timestamp` before the Zip | ucl-open/ucl-open#67 |
 
 Build:
 

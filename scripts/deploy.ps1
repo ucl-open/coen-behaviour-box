@@ -8,8 +8,14 @@ $scriptPath = $MyInvocation.MyCommand.Path
 $scriptDirectory = Split-Path -Parent $scriptPath
 Set-Location (Split-Path -Parent $scriptDirectory)
 
+# A failing native command does not stop a PowerShell script, so each one is checked.
+function Assert-Success([string]$Step) {
+    if ($LASTEXITCODE -ne 0) { throw "$Step failed (exit code $LASTEXITCODE). The deploy is incomplete." }
+}
+
 Write-Output "Initializing and updating submodules..."
 &git submodule update --init --recursive
+Assert-Success "git submodule update"
 
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     throw "The 'uv' command was not found. See https://docs.astral.sh/uv/getting-started/installation/ for instructions."
@@ -20,12 +26,15 @@ if (Test-Path -Path ./.venv) {
     Remove-Item ./.venv -Recurse -Force
 }
 &uv venv
+Assert-Success "uv venv"
 .\.venv\Scripts\Activate.ps1
 Write-Output "Synchronizing environment..."
 &uv sync
+Assert-Success "uv sync"
 
 Write-Output "Regenerating JSON schema from pydantic models..."
 &uv run regenerate-schemas
+Assert-Success "Regenerating the schemas"
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     throw "The 'dotnet' command was not found. Install the .NET SDK: https://dotnet.microsoft.com/download"
@@ -33,6 +42,7 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
 
 Write-Output "Restoring dotnet tools..."
 &dotnet tool restore
+Assert-Success "dotnet tool restore"
 
 # Derive C# namespace from schema filename (snake_case -> PascalCase).
 $schemaFile = Get-ChildItem ".\src\DataSchemas\*.json" | Select-Object -First 1
@@ -47,9 +57,11 @@ Write-Output "Generating C# classes (namespace: $namespace, serializers: json ya
 Push-Location .\src\Extensions
 &dotnet bonsai.sgen $schemaFile.FullName --namespace $namespace --serializer json --serializer yaml
 Pop-Location
+Assert-Success "Generating the C# classes"
 
 Write-Output "Writing the rig configuration template..."
 &uv run python examples/rig.py
+Assert-Success "Writing the rig configuration template"
 
 # Same name the rig workflow resolves at startup (Environment.MachineName).
 $machineDirectory = Join-Path $ConfigRoot ([Environment]::MachineName)
@@ -69,6 +81,7 @@ if (Test-Path -Path $rigConfig) {
 
 Write-Output "Creating a Bonsai environment and installing packages..."
 &.\.bonsai\Setup.cmd
+Assert-Success "Installing Bonsai and its packages"
 
 # The video is encoded by ffmpeg.exe, which Bonsai.FFmpeg starts from PATH, on Intel Quick Sync
 # (h264_qsv). Without it, recording stops as soon as Start recording is pressed.

@@ -27,7 +27,6 @@ dependencies = [
 # Issues = "https://github.com/OpenRigs/Ucl.Open.CoenBehaviourBox/issues"
 # Changelog = "https://github.com/OpenRigs/Ucl.Open.CoenBehaviourBox/releases"
 [project.scripts]
-coen-behaviour-box = "ucl_open_coen_behaviour_box.cli:main"
 regenerate-schemas = "ucl_open_coen_behaviour_box.regenerate:main"
 
 [tool.ruff]
