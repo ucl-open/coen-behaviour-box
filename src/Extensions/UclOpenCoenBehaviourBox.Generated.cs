@@ -1127,14 +1127,11 @@ namespace UclOpenCoenBehaviourBox
     
         private SpinnakerCamera _camera;
     
-        private int _trackingThreshold;
-    
         public UclOpenCoenBehaviourBoxRig()
         {
             _version = "0.0.0-rc1";
             _behaviorBoard = new BehaviorBoard();
             _camera = new SpinnakerCamera();
-            _trackingThreshold = 35;
         }
     
         protected UclOpenCoenBehaviourBoxRig(UclOpenCoenBehaviourBoxRig other)
@@ -1143,7 +1140,6 @@ namespace UclOpenCoenBehaviourBox
             _version = other._version;
             _behaviorBoard = other._behaviorBoard;
             _camera = other._camera;
-            _trackingThreshold = other._trackingThreshold;
         }
     
         /// <summary>
@@ -1218,25 +1214,6 @@ namespace UclOpenCoenBehaviourBox
             }
         }
     
-        /// <summary>
-        /// Pixels darker than this are treated as the mouse. Depends on the box's lighting: raise it for a lighter image or animal, lower it for a darker one.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("trackingThreshold")]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="trackingThreshold")]
-        [System.ComponentModel.DescriptionAttribute("Pixels darker than this are treated as the mouse. Depends on the box\'s lighting: " +
-            "raise it for a lighter image or animal, lower it for a darker one.")]
-        public int TrackingThreshold
-        {
-            get
-            {
-                return _trackingThreshold;
-            }
-            set
-            {
-                _trackingThreshold = value;
-            }
-        }
-    
         public System.IObservable<UclOpenCoenBehaviourBoxRig> Generate()
         {
             return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new UclOpenCoenBehaviourBoxRig(this)));
@@ -1252,8 +1229,7 @@ namespace UclOpenCoenBehaviourBox
             stringBuilder.Append("RootPath = " + _rootPath + ", ");
             stringBuilder.Append("Version = " + _version + ", ");
             stringBuilder.Append("BehaviorBoard = " + _behaviorBoard + ", ");
-            stringBuilder.Append("Camera = " + _camera + ", ");
-            stringBuilder.Append("TrackingThreshold = " + _trackingThreshold);
+            stringBuilder.Append("Camera = " + _camera);
             return true;
         }
     

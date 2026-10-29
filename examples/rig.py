@@ -30,7 +30,6 @@ rig = UclOpenCoenBehaviourBoxRig(
         running_wheel=RunningWheel(counts_per_rev=4096, wheel_diameter_mm=150),
     ),
     camera=SpinnakerCamera(serial_number="CHANGE-ME", exposure_time=10000, gain=5, binning=1, trigger_frequency=50),
-    tracking_threshold=35,
 )
 
 

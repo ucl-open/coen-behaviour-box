@@ -16,9 +16,3 @@ class UclOpenCoenBehaviourBoxRig(Rig):
     camera: SpinnakerCamera = Field(
         description="The triggered Spinnaker camera. Its frame rate is the board's trigger0_frequency."
     )
-    tracking_threshold: int = Field(
-        default=35,
-        ge=0,
-        le=255,
-        description="Pixels darker than this are treated as the mouse. Depends on the box's lighting: raise it for a lighter image or animal, lower it for a darker one.",
-    )

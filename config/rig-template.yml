@@ -22,5 +22,4 @@ camera:
   serialNumber: CHANGE-ME
   triggerFrequency: 50.0
 rootPath: C:\Data\CHANGE-ME
-trackingThreshold: 35
 version: 0.0.0-rc1

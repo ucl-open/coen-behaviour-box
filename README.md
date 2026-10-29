@@ -1,6 +1,6 @@
 # coen-behaviour-box
 
-Acquisition for the Coen Lab behaviour box: a triggered Spinnaker camera recorded with FFmpeg, frame times paired with Harp triggers, and centre-of-mass tracking. The hardware (assembly, parts) lives in [Coen-Lab/hw-behaviour-box](https://github.com/Coen-Lab/hw-behaviour-box).
+Acquisition for the Coen Lab behaviour box: a triggered Spinnaker camera recorded with FFmpeg, frame times paired with Harp triggers, and the Harp board logged raw. Session files follow av-dome's (`ActiveExperiments`) layout. The hardware (assembly, parts) lives in [Coen-Lab/hw-behaviour-box](https://github.com/Coen-Lab/hw-behaviour-box).
 
 Generated from the [open-rigs](https://github.com/open-rigs/open-rigs) template (`.copier-answers.yml` records the commit).
 
@@ -16,7 +16,7 @@ This creates the Python environment, regenerates the schemas and their C# classe
 
 ## Per-machine settings
 
-Nothing machine-specific is committed. The workflow reads `<ConfigRoot>\<MACHINE-NAME>\rig.yml` at startup (`ConfigRoot` defaults to `C:\RigConfigs`) and refuses to start if it is missing. `deploy.cmd` creates it from `config\rig-template.yml` the first time; fill in that machine's board port, camera serial number, exposure, gain, binning, wheel size, tracking threshold and data path (`rootPath`) there.
+Nothing machine-specific is committed. The workflow reads `<ConfigRoot>\<MACHINE-NAME>\rig.yml` at startup (`ConfigRoot` defaults to `C:\RigConfigs`) and refuses to start if it is missing. `deploy.cmd` creates it from `config\rig-template.yml` the first time; fill in that machine's board port, camera serial number, exposure, gain, binning, wheel size and data path (`rootPath`) there.
 
 ## Running a session
 
@@ -24,9 +24,10 @@ Open `src\main.bonsai` in `.bonsai\Bonsai.exe` and press Start. The board connec
 
 Each session writes to `<rootPath>\sub-<subject>\ses-<session>_date-<date>\`:
 
-- `VideoData_Camera.avi`: H.264 video of every frame received. A frame the camera drops is missing, not repeated, and the recording stops after the run length's number of received frames (30 min at 50 Hz = 90,000).
-- `LogData.csv`: one row per video frame with the Harp time of its trigger (`Seconds`), camera timestamp, `FrameID`, configured exposure, the mouse's centre of mass (`MouseLocation.X`, `MouseLocation.Y`) and the wheel distance in cm (`WheelDistance`, counted from when Bonsai started, so subtract the first row for distance within the session). A dropped frame shows as a jump in `FrameID` and `Seconds`.
-- `BehaviorBoard\`: every Harp message from the board, one binary file per register (`OpenRigs.Logging:LogHarpDevice`, as av-dome logs its boards), starting with a register dump requested when logging begins, so the board's settings for the session are on record. The running wheel's raw encoder position is in the `AnalogData` register at the board's full rate.
+- `Cameras\VideoData_Camera1.avi`: H.264 video of every frame received. A frame the camera drops is missing, not repeated, and the recording stops after the run length's number of received frames (30 min at 50 Hz = 90,000).
+- `Cameras\VideoData_Camera1.csv`: one row per video frame, the same columns as av-dome: the Harp time of its trigger (`Seconds`), camera `Timestamp`, `FrameID` and `ExposureTime` (the configured value). A dropped frame shows as a jump in `FrameID` and `Seconds`.
+- `BehaviorBoard\BehaviorBoard_<address>_<date>.bin`: every Harp event and write from the board, one file per register, logged with `OpenRigs.Logging:LogHarpDevice` (the same logger as ucl-open main). `<date>` is the Harp clock's, not wall time. The running wheel's raw encoder position is in `BehaviorBoard_44_*` (`AnalogData`, `Encoder`) at the board's full rate, about 1 kHz.
+- `BehaviorBoard\BehaviorBoard_<date>.bin`: the board's register dump, requested when logging begins, so its settings for the session are on record. (av-dome's current logger, `UclOpen.Logging` from May 2026, keeps only the first reply of each second: ucl-open/av-dome#33.)
 
 If no frame arrives within 15 s of Start recording, the workflow stops with "The operation has timed out." (usually the trigger cable).
 

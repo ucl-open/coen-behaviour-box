@@ -161,13 +161,11 @@
           <Property Name="PortName" Selector="BehaviorBoard.PortName" />
           <Property Name="Trigger0Frequency" Selector="BehaviorBoard.CameraTriggerController.Trigger0Frequency" />
           <Property Name="Trigger1Frequency" Selector="BehaviorBoard.CameraTriggerController.Trigger1Frequency" />
-          <Property Name="CountsPerRev" Selector="BehaviorBoard.RunningWheel.CountsPerRev" />
-          <Property Name="WheelDiameterMm" Selector="BehaviorBoard.RunningWheel.WheelDiameterMm" />
         </PropertyMappings>
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>BehaviorBoard</Name>
-        <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel on encoder port 2 (inline, in Position mode). Triggers start 5 s after Start recording, so the camera is armed first.</Description>
+        <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel's encoder on port 2 (inline, in Position mode, logged raw). Triggers start 5 s after Start recording, so the camera is armed first.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -180,13 +178,9 @@
               <Heartbeat>Enabled</Heartbeat>
               <EventsSubjectName>BehaviorEvents</EventsSubjectName>
             </Expression>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="CountsPerRev" />
-              <Property Name="WheelDiameterMm" />
-            </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>RunningWheel</Name>
-              <Description>Inline copy of the OpenRigs.Devices RunningWheel include set to Position, as av-dome does. The include sets Displacement, where the board reports the change in each 2 ms sample, and then differences and accumulates it, which yields a speed sample rather than a distance. Distance is accumulated from Bonsai start.</Description>
+              <Description>Sets up the running wheel's encoder on port 2 in Position mode, as av-dome does, so the board's AnalogData (register 44) carries the absolute encoder count, logged raw. The OpenRigs.Devices RunningWheel include sets Displacement and then differences and accumulates it, which yields a speed sample rather than a distance; distance is computed offline from the raw count with countsPerRev and wheelDiameterMm in rig.yml.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="beh:CreateMessage">
@@ -225,92 +219,6 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:SubscribeWhen" />
                   </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>BehaviorEvents</Name>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:DelaySubscription">
-                      <rx:DueTime>PT0.1S</rx:DueTime>
-                    </Combinator>
-                  </Expression>
-                  <Expression xsi:type="beh:Parse">
-                    <harp:Register xsi:type="beh:AnalogData" />
-                  </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>Encoder</Selector>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="dsp:Difference">
-                      <dsp:Order>1</dsp:Order>
-                    </Combinator>
-                  </Expression>
-                  <Expression xsi:type="scr:ExpressionTransform">
-                    <scr:Name>ConvertSigned</scr:Name>
-                    <scr:Expression>it &gt; 32768.0 ? it - 65536.0 : (it &lt; -32768.0 ? it + 65536.0 : it)</scr:Expression>
-                  </Expression>
-                  <Expression xsi:type="rx:Accumulate" />
-                  <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="CountsPerRev" />
-                    <Property Name="WheelDiameterMm" />
-                  </Expression>
-                  <Expression xsi:type="GroupWorkflow">
-                    <Name>TicksToCentimeters</Name>
-                    <Description>Converts steps on a quadrature encoder to a distance in cm, published to a Subject</Description>
-                    <Workflow>
-                      <Nodes>
-                        <Expression xsi:type="WorkflowInput">
-                          <Name>Source1</Name>
-                        </Expression>
-                        <Expression xsi:type="ExternalizedMapping">
-                          <Property Name="Value" DisplayName="CountsPerRev" Description="The number of steps recorded on the quadrature encoder in a full revolution" Category="Running Wheel" />
-                        </Expression>
-                        <Expression xsi:type="Divide">
-                          <Operand xsi:type="WorkflowProperty" TypeArguments="sys:Int16">
-                            <Value>4096</Value>
-                          </Operand>
-                        </Expression>
-                        <Expression xsi:type="ExternalizedMapping">
-                          <Property Name="Value" DisplayName="WheelDiameterMm" Description="The diameter of the wheel, in millimetres" Category="Running Wheel" />
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="IntProperty">
-                            <Value>150</Value>
-                          </Combinator>
-                        </Expression>
-                        <Expression xsi:type="scr:ExpressionTransform">
-                          <scr:Name>CircumferenceCm</scr:Name>
-                          <scr:Expression>(it*Math.Pi)/10</scr:Expression>
-                        </Expression>
-                        <Expression xsi:type="PropertyMapping">
-                          <PropertyMappings>
-                            <Property Name="Value" />
-                          </PropertyMappings>
-                        </Expression>
-                        <Expression xsi:type="Multiply">
-                          <Operand xsi:type="FloatProperty">
-                            <Value>47.12389</Value>
-                          </Operand>
-                        </Expression>
-                        <Expression xsi:type="WorkflowOutput" />
-                      </Nodes>
-                      <Edges>
-                        <Edge From="0" To="2" Label="Source2" />
-                        <Edge From="1" To="2" Label="Source3" />
-                        <Edge From="2" To="7" Label="Source1" />
-                        <Edge From="3" To="4" Label="Source1" />
-                        <Edge From="4" To="5" Label="Source1" />
-                        <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="7" Label="Source2" />
-                        <Edge From="7" To="8" Label="Source1" />
-                      </Edges>
-                    </Workflow>
-                  </Expression>
-                  <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="Name" DisplayName="WheelDistanceSubjectName" Description="The name of the Subject that carries the wheel distance in cm" Category="Subjects" />
-                  </Expression>
-                  <Expression xsi:type="rx:PublishSubject">
-                    <Name>WheelDistanceCm</Name>
-                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="3" Label="Source1" />
@@ -320,18 +228,7 @@
                   <Edge From="4" To="5" Label="Source2" />
                   <Edge From="5" To="8" Label="Source1" />
                   <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="6" To="9" Label="Source1" />
                   <Edge From="7" To="8" Label="Source2" />
-                  <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="11" To="12" Label="Source1" />
-                  <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="13" To="14" Label="Source1" />
-                  <Edge From="14" To="15" Label="Source1" />
-                  <Edge From="15" To="17" Label="Source1" />
-                  <Edge From="16" To="17" Label="Source2" />
-                  <Edge From="17" To="19" Label="Source1" />
-                  <Edge From="18" To="19" Label="Source2" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -366,11 +263,10 @@
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
-            <Edge From="2" To="3" Label="Source1" />
-            <Edge From="4" To="5" Label="Source1" />
+            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
             <Edge From="7" To="8" Label="Source1" />
-            <Edge From="8" To="9" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -498,7 +394,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>RecordVideo</Name>
-        <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records RecordingFrames frames: H.264 video through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, used by OpenRigs.Logging LogVideo, fell behind on the N150 and crashed long sessions) and a CSV row per frame with the Harp time, camera timestamp, FrameID, configured exposure, centre of mass of the pixels darker than TrackingThreshold, and the running wheel distance. Wait for ffmpeg.exe to exit before closing Bonsai.</Description>
+        <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records RecordingFrames frames to Cameras\VideoData_Camera1.avi and Cameras\VideoData_Camera1.csv, the names and columns av-dome writes for its first camera: Seconds (Harp time of the frame's trigger), Timestamp and FrameID (camera), ExposureTime. The video is H.264 through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, which av-dome uses, fell behind on the N150 and crashed long sessions). ExposureTime is the configured value, because OpenRigs.Video's frame does not carry the camera's. Wait for ffmpeg.exe to exit before closing Bonsai.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="WorkflowInput">
@@ -522,7 +418,7 @@
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>FormatFileName</Name>
-              <Description>Generates PathPrefix\VideoData_Camera.avi.</Description>
+              <Description>Generates PathPrefix\Cameras\VideoData_Camera1.avi.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -530,7 +426,12 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="StringProperty">
-                    <Value>VideoData_Camera</Value>
+                    <Value>Cameras</Value>
+                  </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="StringProperty">
+                    <Value>VideoData_Camera1</Value>
                   </Combinator>
                   </Expression>
                   <Expression xsi:type="Combinator">
@@ -542,8 +443,8 @@
                     <Combinator xsi:type="rx:Zip" />
                   </Expression>
                   <Expression xsi:type="Format">
-                    <Format>{0}\{1}.{2}</Format>
-                    <Selector>Item1,Item2,Item3</Selector>
+                    <Format>{0}\{1}\{2}.{3}</Format>
+                    <Selector>Item1,Item2,Item3,Item4</Selector>
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:Take">
@@ -553,12 +454,13 @@
                   <Expression xsi:type="WorkflowOutput" />
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="3" Label="Source1" />
-                  <Edge From="1" To="3" Label="Source2" />
-                  <Edge From="2" To="3" Label="Source3" />
-                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="0" To="4" Label="Source1" />
+                  <Edge From="1" To="4" Label="Source2" />
+                  <Edge From="2" To="4" Label="Source3" />
+                  <Edge From="3" To="4" Label="Source4" />
                   <Edge From="4" To="5" Label="Source1" />
                   <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -594,17 +496,8 @@
             <Expression xsi:type="MemberSelector">
               <Selector>Value.ChunkData.FrameID</Selector>
             </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>MouseCentroid</Name>
-            </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Zip" />
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>WheelDistanceCm</Name>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:WithLatestFrom" />
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>RigConfig</Name>
@@ -617,16 +510,14 @@
             </Expression>
             <Expression xsi:type="scr:ExpressionTransform">
               <scr:Expression>new(
-            Item1.Item1.Item1 as Seconds,
-            Item1.Item1.Item2 as Timestamp,
-            Item1.Item1.Item3 as FrameID,
-            Item2 as ExposureTime,
-            Item1.Item1.Item4 as MouseLocation,
-            Item1.Item2 as WheelDistance)</scr:Expression>
+            Item1.Item1 as Seconds,
+            Item1.Item2 as Timestamp,
+            Item1.Item3 as FrameID,
+            Item2 as ExposureTime)</scr:Expression>
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>FormatFileName</Name>
-              <Description>Generates PathPrefix\LogData.csv.</Description>
+              <Description>Generates PathPrefix\Cameras\VideoData_Camera1.csv.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -634,7 +525,12 @@
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="StringProperty">
-                    <Value>LogData</Value>
+                    <Value>Cameras</Value>
+                  </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="StringProperty">
+                    <Value>VideoData_Camera1</Value>
                   </Combinator>
                   </Expression>
                   <Expression xsi:type="Combinator">
@@ -646,8 +542,8 @@
                     <Combinator xsi:type="rx:Zip" />
                   </Expression>
                   <Expression xsi:type="Format">
-                    <Format>{0}\{1}.{2}</Format>
-                    <Selector>Item1,Item2,Item3</Selector>
+                    <Format>{0}\{1}\{2}.{3}</Format>
+                    <Selector>Item1,Item2,Item3,Item4</Selector>
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:Take">
@@ -657,12 +553,13 @@
                   <Expression xsi:type="WorkflowOutput" />
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="3" Label="Source1" />
-                  <Edge From="1" To="3" Label="Source2" />
-                  <Edge From="2" To="3" Label="Source3" />
-                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="0" To="4" Label="Source1" />
+                  <Edge From="1" To="4" Label="Source2" />
+                  <Edge From="2" To="4" Label="Source3" />
+                  <Edge From="3" To="4" Label="Source4" />
                   <Edge From="4" To="5" Label="Source1" />
                   <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -678,30 +575,6 @@
               <io:Suffix>None</io:Suffix>
               <io:IncludeHeader>true</io:IncludeHeader>
               <io:Selector />
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Grayscale" />
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>RigConfig</Name>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="ThresholdValue" Selector="TrackingThreshold" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Threshold">
-              <cv:ThresholdValue>35</cv:ThresholdValue>
-              <cv:MaxValue>255</cv:MaxValue>
-              <cv:ThresholdType>BinaryInv</cv:ThresholdType>
-            </Combinator>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Centroid" />
-            </Expression>
-            <Expression xsi:type="rx:BehaviorSubject">
-              <Name>MouseCentroid</Name>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:SampleInterval">
@@ -723,26 +596,17 @@
             <Edge From="3" To="11" Label="Source1" />
             <Edge From="3" To="12" Label="Source1" />
             <Edge From="3" To="13" Label="Source1" />
-            <Edge From="11" To="15" Label="Source1" />
-            <Edge From="12" To="15" Label="Source2" />
-            <Edge From="13" To="15" Label="Source3" />
-            <Edge From="14" To="15" Label="Source4" />
-            <Edge From="15" To="17" Label="Source1" />
+            <Edge From="11" To="14" Label="Source1" />
+            <Edge From="12" To="14" Label="Source2" />
+            <Edge From="13" To="14" Label="Source3" />
+            <Edge From="15" To="16" Label="Source1" />
+            <Edge From="14" To="17" Label="Source1" />
             <Edge From="16" To="17" Label="Source2" />
-            <Edge From="17" To="20" Label="Source1" />
-            <Edge From="18" To="19" Label="Source1" />
-            <Edge From="19" To="20" Label="Source2" />
-            <Edge From="20" To="21" Label="Source1" />
-            <Edge From="21" To="24" Label="Source1" />
-            <Edge From="22" To="23" Label="Source1" />
-            <Edge From="23" To="24" Label="Source2" />
-            <Edge From="4" To="25" Label="Source1" />
-            <Edge From="25" To="28" Label="Source1" />
-            <Edge From="26" To="27" Label="Source1" />
-            <Edge From="27" To="28" Label="Source2" />
-            <Edge From="28" To="29" Label="Source1" />
-            <Edge From="29" To="30" Label="Source1" />
-            <Edge From="4" To="31" Label="Source1" />
+            <Edge From="17" To="18" Label="Source1" />
+            <Edge From="19" To="20" Label="Source1" />
+            <Edge From="18" To="21" Label="Source1" />
+            <Edge From="20" To="21" Label="Source2" />
+            <Edge From="4" To="22" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>

@@ -15,8 +15,8 @@ Found while building this workflow on 28 Oct 2026. Open each with the line `*Com
 
 ## Check on the rig
 
-- **Wheel distance.** Turn the wheel exactly 10 turns during a recording: `WheelDistance` in `LogData.csv` should rise by about 471 cm (150 mm wheel). The inline wheel is in Position mode; a wrong sign or scale points at `countsPerRev` or the encoder wiring.
-- **Register dump.** `BehaviorBoard\` should hold the Read replies of a full register dump about 1.5 s after Start recording (requested when `PathPrefix` exists), before the first camera trigger.
+- **Wheel distance.** Turn the wheel exactly 10 turns during a recording: the `Encoder` value in `BehaviorBoard\BehaviorBoard_44_*.bin` (`AnalogData`) should change by 10 x `countsPerRev` (40,960 at 4096), unwrapping the 16-bit counter, which is about 471 cm on the 150 mm wheel. The inline wheel is in Position mode; a wrong sign or scale points at `countsPerRev` or the encoder wiring.
+- **Register dump.** Done 29 Oct 2026 on GEEK-BBOX1: `BehaviorBoard\BehaviorBoard_<date>.bin` holds all 106 Read replies, 0.6 s after Start recording and 3 s before the first camera trigger.
 - **Run panel.** It opens by double-clicking `RunPanel`, because the template ignores `*.layout`. Decide after the first runs whether to track a layout so it opens on Start.
 - **Start-up order.** Video and CSV are subscribed only once `PathPrefix` exists; check the first session's files have the expected names and the run length's frame count (30 min = 90,000 rows).
 

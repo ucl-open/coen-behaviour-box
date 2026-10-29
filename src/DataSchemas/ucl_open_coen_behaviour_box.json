@@ -365,14 +365,6 @@
           "$ref": "#/$defs/SpinnakerCamera",
           "description": "The triggered Spinnaker camera. Its frame rate is the board's trigger0_frequency.",
           "title": "Camera"
-        },
-        "trackingThreshold": {
-          "default": 35,
-          "description": "Pixels darker than this are treated as the mouse. Depends on the box's lighting: raise it for a lighter image or animal, lower it for a darker one.",
-          "maximum": 255,
-          "minimum": 0,
-          "title": "TrackingThreshold",
-          "type": "integer"
         }
       },
       "required": [
