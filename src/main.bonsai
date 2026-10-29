@@ -10,7 +10,6 @@
                  xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns:ffm="clr-namespace:Bonsai.FFmpeg;assembly=Bonsai.FFmpeg"
-                 xmlns:gui="clr-namespace:Bonsai.Gui;assembly=Bonsai.Gui"
                  xmlns:spk="clr-namespace:Bonsai.Spinnaker;assembly=Bonsai.Spinnaker"
                  xmlns:orc="clr-namespace:OpenRigs.Core;assembly=OpenRigs.Core"
                  xmlns:orv="clr-namespace:OpenRigs.Video;assembly=OpenRigs.Video"
@@ -58,265 +57,311 @@
           </Edges>
         </Workflow>
       </Expression>
-      <Expression xsi:type="gui:TextBoxBuilder">
-        <gui:Name>SubjectId</gui:Name>
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:Text></gui:Text>
-        <gui:Multiline>false</gui:Multiline>
-      </Expression>
-      <Expression xsi:type="VisualizerMapping" />
-      <Expression xsi:type="gui:GroupBoxBuilder">
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:Text>Subject ID</gui:Text>
-      </Expression>
-      <Expression xsi:type="VisualizerMapping" />
-      <Expression xsi:type="gui:TextBoxBuilder">
-        <gui:Name>SessionId</gui:Name>
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:Text></gui:Text>
-        <gui:Multiline>false</gui:Multiline>
-      </Expression>
-      <Expression xsi:type="VisualizerMapping" />
-      <Expression xsi:type="gui:GroupBoxBuilder">
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:Text>Session ID</gui:Text>
-      </Expression>
-      <Expression xsi:type="VisualizerMapping" />
-      <Expression xsi:type="gui:TextBoxBuilder">
-        <gui:Name>RunLengthMins</gui:Name>
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:Text>30</gui:Text>
-        <gui:Multiline>false</gui:Multiline>
-      </Expression>
-      <Expression xsi:type="VisualizerMapping" />
-      <Expression xsi:type="gui:GroupBoxBuilder">
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:Text>Run length (whole minutes)</gui:Text>
-      </Expression>
-      <Expression xsi:type="VisualizerMapping" />
-      <Expression xsi:type="gui:ButtonBuilder">
-        <gui:Name>StartRecording</gui:Name>
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:Text>Start recording</gui:Text>
-      </Expression>
-      <Expression xsi:type="VisualizerMapping" />
-      <Expression xsi:type="gui:TableLayoutPanelBuilder">
-        <gui:Name>RunPanel</gui:Name>
-        <gui:Enabled>true</gui:Enabled>
-        <gui:Visible>true</gui:Visible>
-        <gui:ColumnCount>1</gui:ColumnCount>
-        <gui:RowCount>4</gui:RowCount>
-        <gui:ColumnStyles />
-        <gui:RowStyles />
-        <gui:CellSpans />
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:CombineLatest" />
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:WithLatestFrom" />
-      </Expression>
-      <Expression xsi:type="MemberSelector">
-        <Selector>Item2</Selector>
-      </Expression>
-      <Expression xsi:type="rx:Condition">
-        <Name>RunSettingsValid</Name>
-        <Description>Subject and session given, and the run length a whole number of minutes from 1 to 9999. Anything else is refused, so Start recording does nothing.</Description>
-        <Workflow>
-          <Nodes>
-            <Expression xsi:type="WorkflowInput">
-              <Name>Source1</Name>
-            </Expression>
-            <Expression xsi:type="scr:ExpressionTransform">
-              <scr:Expression>Item1.Trim().Length &gt; 0 &amp;&amp; Item2.Trim().Length &gt; 0 &amp;&amp; Item3.Trim().Length &gt; 0 &amp;&amp; Item3.Trim().Length &lt; 5 &amp;&amp; Item3.Trim().Trim("0123456789".ToCharArray()).Length == 0 &amp;&amp; Convert.ToInt32(Item3.Trim()) &gt; 0</scr:Expression>
-            </Expression>
-            <Expression xsi:type="WorkflowOutput" />
-          </Nodes>
-          <Edges>
-            <Edge From="0" To="1" Label="Source1" />
-            <Edge From="1" To="2" Label="Source1" />
-          </Edges>
-        </Workflow>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:Take">
-        <rx:Count>1</rx:Count>
-      </Combinator>
-      </Expression>
-      <Expression xsi:type="rx:AsyncSubject">
-        <Name>RunSettings</Name>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>RigConfig</Name>
-      </Expression>
-      <Expression xsi:type="PropertyMapping">
-        <PropertyMappings>
-          <Property Name="PortName" Selector="BehaviorBoard.PortName" />
-          <Property Name="Trigger0Frequency" Selector="BehaviorBoard.CameraTriggerController.Trigger0Frequency" />
-          <Property Name="Trigger1Frequency" Selector="BehaviorBoard.CameraTriggerController.Trigger1Frequency" />
-        </PropertyMappings>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="SubjectId" />
+        <Property Name="SessionId" />
+        <Property Name="RunLengthMins" />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
-        <Name>BehaviorBoard</Name>
-        <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel's encoder on port 2 (inline, in Position mode, logged raw). Triggers start 5 s after Start recording, so the camera is armed first.</Description>
+        <Name>Initialization</Name>
+        <Description>Subject ID, session ID and run length (whole minutes), from this node's properties or from the command line (--property:SubjectId=...). Checked once at Start and published as RunSettings, which the camera, the triggers and logging wait for. If an ID is empty or the run length is not 1 to 9999, the workflow stops with "Sequence contains no elements." and nothing is recorded.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="PortName" />
+              <Property Name="Value" DisplayName="SubjectId" Description="The subject (mouse) ID." />
             </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.BehaviorBoard.bonsai">
-              <CommandsSubjectName>BehaviorCommands</CommandsSubjectName>
-              <PortName>COMx</PortName>
-              <DumpRegisters>true</DumpRegisters>
-              <Heartbeat>Enabled</Heartbeat>
-              <EventsSubjectName>BehaviorEvents</EventsSubjectName>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="StringProperty">
+                <Value />
+              </Combinator>
             </Expression>
-            <Expression xsi:type="GroupWorkflow">
-              <Name>RunningWheel</Name>
-              <Description>Sets up the running wheel's encoder on port 2 in Position mode, as av-dome does, so the board's AnalogData (register 44) carries the absolute encoder count, logged raw. The OpenRigs.Devices RunningWheel include sets Displacement and then differences and accumulates it, which yields a speed sample rather than a distance; distance is computed offline from the raw count with countsPerRev and wheelDiameterMm in rig.yml.</Description>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="Value" DisplayName="SessionId" Description="The session ID." />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="StringProperty">
+                <Value />
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="Value" DisplayName="RunLengthMins" Description="How long to record, in whole minutes (1 to 9999)." />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="IntProperty">
+                <Value>30</Value>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Zip" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:Condition">
+              <Name>RunSettingsValid</Name>
+              <Description>Subject and session given, and the run length from 1 to 9999 minutes.</Description>
               <Workflow>
                 <Nodes>
-                  <Expression xsi:type="beh:CreateMessage">
-                    <harp:MessageType>Write</harp:MessageType>
-                    <harp:Payload xsi:type="beh:CreateEnableEncodersPayload">
-                      <beh:EnableEncoders>EncoderPort2</beh:EnableEncoders>
-                    </harp:Payload>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
                   </Expression>
-                  <Expression xsi:type="beh:CreateMessage">
-                    <harp:MessageType>Write</harp:MessageType>
-                    <harp:Payload xsi:type="beh:CreateEncoderModePayload">
-                      <beh:EncoderMode>Position</beh:EncoderMode>
-                    </harp:Payload>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Expression>Item1.Trim().Length &gt; 0 &amp;&amp; Item2.Trim().Length &gt; 0 &amp;&amp; Item3 &gt;= 1 &amp;&amp; Item3 &lt;= 9999</scr:Expression>
                   </Expression>
-                  <Expression xsi:type="beh:CreateMessage">
-                    <harp:MessageType>Write</harp:MessageType>
-                    <harp:Payload xsi:type="beh:CreateEncoderResetPayload">
-                      <beh:EncoderReset>EncoderPort2</beh:EncoderReset>
-                    </harp:Payload>
+                  <Expression xsi:type="WorkflowOutput" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                </Edges>
+              </Workflow>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:First" />
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>RunSettings</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="1" To="6" Label="Source1" />
+            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="3" To="6" Label="Source2" />
+            <Edge From="4" To="5" Label="Source1" />
+            <Edge From="5" To="6" Label="Source3" />
+            <Edge From="6" To="7" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="10" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>Hardware</Name>
+        <Description>The Harp Behavior board (running wheel encoder, camera trigger) and the camera. Each device takes its settings from its own section of rig.yml.</Description>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>BehaviorBoard</Name>
+              <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel's encoder on port 2 (inline, in Position mode, logged raw). Triggers start 5 s after Start recording, so the camera is armed first.</Description>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RigConfig</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="PortName" Selector="BehaviorBoard.PortName" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.BehaviorBoard.bonsai">
+                    <CommandsSubjectName>BehaviorCommands</CommandsSubjectName>
+                    <PortName>COMx</PortName>
+                    <DumpRegisters>true</DumpRegisters>
+                    <Heartbeat>Enabled</Heartbeat>
+                    <EventsSubjectName>BehaviorEvents</EventsSubjectName>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>RunningWheel</Name>
+                    <Description>Sets up the running wheel's encoder on port 2 in Position mode, as av-dome does, so the board's AnalogData (register 44) carries the absolute encoder count, logged raw. The OpenRigs.Devices RunningWheel include sets Displacement and then differences and accumulates it, which yields a speed sample rather than a distance; distance is computed offline from the raw count with countsPerRev and wheelDiameterMm in rig.yml.</Description>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="beh:CreateMessage">
+                          <harp:MessageType>Write</harp:MessageType>
+                          <harp:Payload xsi:type="beh:CreateEnableEncodersPayload">
+                            <beh:EnableEncoders>EncoderPort2</beh:EnableEncoders>
+                          </harp:Payload>
+                        </Expression>
+                        <Expression xsi:type="beh:CreateMessage">
+                          <harp:MessageType>Write</harp:MessageType>
+                          <harp:Payload xsi:type="beh:CreateEncoderModePayload">
+                            <beh:EncoderMode>Position</beh:EncoderMode>
+                          </harp:Payload>
+                        </Expression>
+                        <Expression xsi:type="beh:CreateMessage">
+                          <harp:MessageType>Write</harp:MessageType>
+                          <harp:Payload xsi:type="beh:CreateEncoderResetPayload">
+                            <beh:EncoderReset>EncoderPort2</beh:EncoderReset>
+                          </harp:Payload>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Merge" />
+                        </Expression>
+                        <Expression xsi:type="ExternalizedMapping">
+                          <Property Name="Name" DisplayName="CommandsSubjectName" Description="The name of the Subject that carries command messages for a specific behavior device" Category="Subjects" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>BehaviorCommands</Name>
+                        </Expression>
+                        <Expression xsi:type="ExternalizedMapping">
+                          <Property Name="Name" DisplayName="EventsSubjectName" Description="The name of the Subject that carries event messages from a specific behavior device" Category="Subjects" />
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>BehaviorEvents</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:SubscribeWhen" />
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="3" Label="Source1" />
+                        <Edge From="1" To="3" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source3" />
+                        <Edge From="3" To="5" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source2" />
+                        <Edge From="5" To="8" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                        <Edge From="7" To="8" Label="Source2" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RigConfig</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="Trigger0Frequency" Selector="BehaviorBoard.CameraTriggerController.Trigger0Frequency" />
+                      <Property Name="Trigger1Frequency" Selector="BehaviorBoard.CameraTriggerController.Trigger1Frequency" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.CameraTriggerController.bonsai">
+                    <Trigger0Frequency>50</Trigger0Frequency>
+                    <Trigger1Frequency>50</Trigger1Frequency>
+                    <BehaviorCommandsSubjectName>BehaviorCommands</BehaviorCommandsSubjectName>
+                    <BehaviorEventsSubjectName>BehaviorEvents</BehaviorEventsSubjectName>
+                    <Camera0TriggerEventsSubjectName>Camera0TriggerEvents</Camera0TriggerEventsSubjectName>
+                    <Camera1TriggerEventsSubjectName>Camera1TriggerEvents</Camera1TriggerEventsSubjectName>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RunSettings</Name>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:Merge" />
+                    <Combinator xsi:type="BooleanProperty">
+                    <Value>true</Value>
+                  </Combinator>
                   </Expression>
-                  <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="Name" DisplayName="CommandsSubjectName" Description="The name of the Subject that carries command messages for a specific behavior device" Category="Subjects" />
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Delay">
+                    <rx:DueTime>PT5S</rx:DueTime>
+                  </Combinator>
                   </Expression>
                   <Expression xsi:type="MulticastSubject">
-                    <Name>BehaviorCommands</Name>
+                    <Name>StartCameras</Name>
                   </Expression>
-                  <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="Name" DisplayName="EventsSubjectName" Description="The name of the Subject that carries event messages from a specific behavior device" Category="Subjects" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
+                </Edges>
+              </Workflow>
+            </Expression>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>Camera</Name>
+              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Nothing subscribes until Start recording is pressed; the Timeout then stops the workflow with &quot;The operation has timed out.&quot; if no frame arrives for 15 s (usually the trigger cable).</Description>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RigConfig</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="SerialNumber" Selector="Camera.SerialNumber" />
+                      <Property Name="ExposureTime" Selector="Camera.ExposureTime" />
+                      <Property Name="Gain" Selector="Camera.Gain" />
+                      <Property Name="Binning" Selector="Camera.Binning" />
+                    </PropertyMappings>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>BehaviorEvents</Name>
                   </Expression>
                   <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="harp:FilterMessageType">
+                    <harp:FilterType>Include</harp:FilterType>
+                    <harp:MessageType>Event</harp:MessageType>
+                  </Combinator>
+                  </Expression>
+                  <Expression xsi:type="beh:Parse">
+                    <harp:Register xsi:type="beh:TimestampedCamera0Frame" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="orv:TriggeredSpinnaker">
+                    <spk:Index xsi:nil="true" />
+                    <spk:SerialNumber />
+                    <spk:ColorProcessing>Default</spk:ColorProcessing>
+                    <orv:ExposureTime>10000</orv:ExposureTime>
+                    <orv:Gain>5</orv:Gain>
+                    <orv:Binning>1</orv:Binning>
+                  </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Timeout">
+                    <rx:DueTime>PT15S</rx:DueTime>
+                  </Combinator>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RunSettings</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:SubscribeWhen" />
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>FrameEvents</Name>
                   </Expression>
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="3" Label="Source1" />
-                  <Edge From="1" To="3" Label="Source2" />
-                  <Edge From="2" To="3" Label="Source3" />
-                  <Edge From="3" To="5" Label="Source1" />
-                  <Edge From="4" To="5" Label="Source2" />
-                  <Edge From="5" To="8" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="1" To="5" Label="Source2" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="8" Label="Source1" />
                   <Edge From="7" To="8" Label="Source2" />
+                  <Edge From="8" To="9" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="Trigger0Frequency" />
-              <Property Name="Trigger1Frequency" />
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.CameraTriggerController.bonsai">
-              <Trigger0Frequency>50</Trigger0Frequency>
-              <Trigger1Frequency>50</Trigger1Frequency>
-              <BehaviorCommandsSubjectName>BehaviorCommands</BehaviorCommandsSubjectName>
-              <BehaviorEventsSubjectName>BehaviorEvents</BehaviorEventsSubjectName>
-              <Camera0TriggerEventsSubjectName>Camera0TriggerEvents</Camera0TriggerEventsSubjectName>
-              <Camera1TriggerEventsSubjectName>Camera1TriggerEvents</Camera1TriggerEventsSubjectName>
-            </Expression>
+          </Nodes>
+          <Edges />
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>Logging</Name>
+        <Description>Waits for RunSettings, then LogController creates the session folder (PathPrefix). Once it exists: the video and its CSV, every Behavior board message, and a register dump so the board log records the board's settings.</Description>
+        <Workflow>
+          <Nodes>
             <Expression xsi:type="SubscribeSubject">
               <Name>RunSettings</Name>
             </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="BooleanProperty">
-              <Value>true</Value>
-            </Combinator>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Delay">
-              <rx:DueTime>PT5S</rx:DueTime>
-            </Combinator>
-            </Expression>
-            <Expression xsi:type="MulticastSubject">
-              <Name>StartCameras</Name>
-            </Expression>
-          </Nodes>
-          <Edges>
-            <Edge From="0" To="1" Label="Source1" />
-            <Edge From="3" To="4" Label="Source1" />
-            <Edge From="5" To="6" Label="Source1" />
-            <Edge From="6" To="7" Label="Source1" />
-            <Edge From="7" To="8" Label="Source1" />
-          </Edges>
-        </Workflow>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>RigConfig</Name>
-      </Expression>
-      <Expression xsi:type="PropertyMapping">
-        <PropertyMappings>
-          <Property Name="SerialNumber" Selector="Camera.SerialNumber" />
-          <Property Name="ExposureTime" Selector="Camera.ExposureTime" />
-          <Property Name="Gain" Selector="Camera.Gain" />
-          <Property Name="Binning" Selector="Camera.Binning" />
-        </PropertyMappings>
-      </Expression>
-      <Expression xsi:type="GroupWorkflow">
-        <Name>Camera</Name>
-        <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Nothing subscribes until Start recording is pressed; the Timeout then stops the workflow with &quot;The operation has timed out.&quot; if no frame arrives for 15 s (usually the trigger cable).</Description>
-        <Workflow>
-          <Nodes>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="SerialNumber" />
-              <Property Name="ExposureTime" />
-              <Property Name="Gain" />
-              <Property Name="Binning" />
-            </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>BehaviorEvents</Name>
+              <Name>RigConfig</Name>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="harp:FilterMessageType">
-              <harp:FilterType>Include</harp:FilterType>
-              <harp:MessageType>Event</harp:MessageType>
-            </Combinator>
+              <Combinator xsi:type="rx:Zip" />
             </Expression>
-            <Expression xsi:type="beh:Parse">
-              <harp:Register xsi:type="beh:TimestampedCamera0Frame" />
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="SubjectId" Selector="Item1.Item1" />
+                <Property Name="SessionId" Selector="Item1.Item2" />
+                <Property Name="Path" Selector="Item2.RootPath" />
+              </PropertyMappings>
             </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="orv:TriggeredSpinnaker">
-              <spk:Index xsi:nil="true" />
-              <spk:SerialNumber />
-              <spk:ColorProcessing>Default</spk:ColorProcessing>
-              <orv:ExposureTime>10000</orv:ExposureTime>
-              <orv:Gain>5</orv:Gain>
-              <orv:Binning>1</orv:Binning>
-            </Combinator>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:LogController.bonsai">
+              <SubjectId>CHANGE-ME</SubjectId>
+              <SessionId>CHANGE-ME</SessionId>
+              <Path>C:\Data</Path>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Timeout">
-              <rx:DueTime>PT15S</rx:DueTime>
+              <Combinator xsi:type="rx:DelaySubscription">
+              <rx:DueTime>PT1S</rx:DueTime>
             </Combinator>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
@@ -325,381 +370,317 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:SubscribeWhen" />
             </Expression>
-            <Expression xsi:type="rx:PublishSubject">
+            <Expression xsi:type="SubscribeSubject">
               <Name>FrameEvents</Name>
             </Expression>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>RecordVideo</Name>
+              <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records the run length's worth of frames (RunLengthToFrames) to Cameras\VideoData_Camera1.avi and Cameras\VideoData_Camera1.csv, the names and columns av-dome writes for its first camera: Seconds (Harp time of the frame's trigger), Timestamp and FrameID (camera), ExposureTime. The video is H.264 through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, which av-dome uses, fell behind on the N150 and crashed long sessions). ExposureTime is the configured value, because OpenRigs.Video's frame does not carry the camera's. Wait for ffmpeg.exe to exit before closing Bonsai.</Description>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>RunLengthToFrames</Name>
+                    <Description>Frames to record: run length (minutes) x 60 x the camera trigger frequency in rig.yml.</Description>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RunSettings</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RigConfig</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Zip" />
+                        </Expression>
+                        <Expression xsi:type="scr:ExpressionTransform">
+                          <scr:Name>RunLengthToFrames</scr:Name>
+                          <scr:Expression>Convert.ToInt32(Convert.ToDouble(Item1.Item3) * 60.0 * Item2.BehaviorBoard.CameraTriggerController.Trigger0Frequency)</scr:Expression>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="2" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source2" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="Count" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Take">
+                    <rx:Count>3000</rx:Count>
+                  </Combinator>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Value.Image</Selector>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>FormatFileName</Name>
+                    <Description>Generates PathPrefix\Cameras\VideoData_Camera1.avi.</Description>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>PathPrefix</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                          <Value>Cameras</Value>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                          <Value>VideoData_Camera1</Value>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                          <Value>avi</Value>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Zip" />
+                        </Expression>
+                        <Expression xsi:type="Format">
+                          <Format>{0}\{1}\{2}.{3}</Format>
+                          <Selector>Item1,Item2,Item3,Item4</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Take">
+                          <rx:Count>1</rx:Count>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="4" Label="Source1" />
+                        <Edge From="1" To="4" Label="Source2" />
+                        <Edge From="2" To="4" Label="Source3" />
+                        <Edge From="3" To="4" Label="Source4" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="FileName" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RigConfig</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="FrameRate" Selector="BehaviorBoard.CameraTriggerController.Trigger0Frequency" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="ffm:VideoWriter">
+                    <ffm:FileName />
+                    <ffm:Suffix>None</ffm:Suffix>
+                    <ffm:Overwrite>false</ffm:Overwrite>
+                    <ffm:FrameRate>50</ffm:FrameRate>
+                    <ffm:OutputArguments>-loglevel error -nostats -c:v h264_qsv -preset veryfast -global_quality 20 -bf 0 -pix_fmt nv12</ffm:OutputArguments>
+                  </Combinator>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Seconds</Selector>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Value.ChunkData.Timestamp</Selector>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Value.ChunkData.FrameID</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Zip" />
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RigConfig</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Camera.ExposureTime</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:WithLatestFrom" />
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Expression>new(
+                  Item1.Item1 as Seconds,
+                  Item1.Item2 as Timestamp,
+                  Item1.Item3 as FrameID,
+                  Item2 as ExposureTime)</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>FormatFileName</Name>
+                    <Description>Generates PathPrefix\Cameras\VideoData_Camera1.csv.</Description>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>PathPrefix</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                          <Value>Cameras</Value>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                          <Value>VideoData_Camera1</Value>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                          <Value>csv</Value>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Zip" />
+                        </Expression>
+                        <Expression xsi:type="Format">
+                          <Format>{0}\{1}\{2}.{3}</Format>
+                          <Selector>Item1,Item2,Item3,Item4</Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Take">
+                          <rx:Count>1</rx:Count>
+                        </Combinator>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="4" Label="Source1" />
+                        <Edge From="1" To="4" Label="Source2" />
+                        <Edge From="2" To="4" Label="Source3" />
+                        <Edge From="3" To="4" Label="Source4" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="FileName" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="io:CsvWriter">
+                    <io:FileName />
+                    <io:Append>false</io:Append>
+                    <io:Overwrite>false</io:Overwrite>
+                    <io:Suffix>None</io:Suffix>
+                    <io:IncludeHeader>true</io:IncludeHeader>
+                    <io:Selector />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:SampleInterval">
+                    <rx:Interval>PT0.2S</rx:Interval>
+                  </Combinator>
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="3" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source2" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="9" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="9" Label="Source2" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="9" Label="Source3" />
+                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="3" To="11" Label="Source1" />
+                  <Edge From="3" To="12" Label="Source1" />
+                  <Edge From="3" To="13" Label="Source1" />
+                  <Edge From="11" To="14" Label="Source1" />
+                  <Edge From="12" To="14" Label="Source2" />
+                  <Edge From="13" To="14" Label="Source3" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="14" To="17" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source2" />
+                  <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="19" To="20" Label="Source1" />
+                  <Edge From="18" To="21" Label="Source1" />
+                  <Edge From="20" To="21" Label="Source2" />
+                  <Edge From="4" To="22" Label="Source1" />
+                </Edges>
+              </Workflow>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>PathPrefix</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:SubscribeWhen" />
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>BehaviorEvents</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>PathPrefix</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:SubscribeWhen" />
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:LogHarpDevice.bonsai">
+              <LogName>BehaviorBoard</LogName>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>PathPrefix</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Delay">
+                <rx:DueTime>PT0.5S</rx:DueTime>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="harp:CreateMessage">
+              <harp:MessageType>Write</harp:MessageType>
+              <harp:Payload xsi:type="harp:CreateOperationControlPayload">
+                <harp:OperationMode>Active</harp:OperationMode>
+                <harp:DumpRegisters>true</harp:DumpRegisters>
+                <harp:MuteReplies>false</harp:MuteReplies>
+                <harp:VisualIndicators>Off</harp:VisualIndicators>
+                <harp:OperationLed>Off</harp:OperationLed>
+                <harp:Heartbeat>Enabled</harp:Heartbeat>
+              </harp:Payload>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>BehaviorCommands</Name>
+            </Expression>
           </Nodes>
           <Edges>
-            <Edge From="1" To="2" Label="Source1" />
+            <Edge From="0" To="2" Label="Source1" />
+            <Edge From="1" To="2" Label="Source2" />
             <Edge From="2" To="3" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
-            <Edge From="0" To="4" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
             <Edge From="5" To="7" Label="Source1" />
-            <Edge From="7" To="8" Label="Source1" />
             <Edge From="6" To="7" Label="Source2" />
-          </Edges>
-        </Workflow>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>RunSettings</Name>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>RigConfig</Name>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:Zip" />
-      </Expression>
-      <Expression xsi:type="PropertyMapping">
-        <PropertyMappings>
-          <Property Name="SubjectId" Selector="Item1.Item1" />
-          <Property Name="SessionId" Selector="Item1.Item2" />
-          <Property Name="Path" Selector="Item2.RootPath" />
-        </PropertyMappings>
-      </Expression>
-      <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:LogController.bonsai">
-        <SubjectId>CHANGE-ME</SubjectId>
-        <SessionId>CHANGE-ME</SessionId>
-        <Path>C:\Data</Path>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:DelaySubscription">
-        <rx:DueTime>PT1S</rx:DueTime>
-      </Combinator>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>RunSettings</Name>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:SubscribeWhen" />
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>RunSettings</Name>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>RigConfig</Name>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:Zip" />
-      </Expression>
-      <Expression xsi:type="scr:ExpressionTransform">
-        <scr:Name>RunLengthToFrames</scr:Name>
-        <scr:Expression>Convert.ToInt32(Convert.ToDouble(Item1.Item3) * 60.0 * Item2.BehaviorBoard.CameraTriggerController.Trigger0Frequency)</scr:Expression>
-      </Expression>
-      <Expression xsi:type="rx:AsyncSubject">
-        <Name>RecordingFrames</Name>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>FrameEvents</Name>
-      </Expression>
-      <Expression xsi:type="GroupWorkflow">
-        <Name>RecordVideo</Name>
-        <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records RecordingFrames frames to Cameras\VideoData_Camera1.avi and Cameras\VideoData_Camera1.csv, the names and columns av-dome writes for its first camera: Seconds (Harp time of the frame's trigger), Timestamp and FrameID (camera), ExposureTime. The video is H.264 through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, which av-dome uses, fell behind on the N150 and crashed long sessions). ExposureTime is the configured value, because OpenRigs.Video's frame does not carry the camera's. Wait for ffmpeg.exe to exit before closing Bonsai.</Description>
-        <Workflow>
-          <Nodes>
-            <Expression xsi:type="WorkflowInput">
-              <Name>Source1</Name>
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>RecordingFrames</Name>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="Count" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Take">
-              <rx:Count>3000</rx:Count>
-            </Combinator>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Value.Image</Selector>
-            </Expression>
-            <Expression xsi:type="GroupWorkflow">
-              <Name>FormatFileName</Name>
-              <Description>Generates PathPrefix\Cameras\VideoData_Camera1.avi.</Description>
-              <Workflow>
-                <Nodes>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>PathPrefix</Name>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="StringProperty">
-                    <Value>Cameras</Value>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="StringProperty">
-                    <Value>VideoData_Camera1</Value>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="StringProperty">
-                    <Value>avi</Value>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:Zip" />
-                  </Expression>
-                  <Expression xsi:type="Format">
-                    <Format>{0}\{1}\{2}.{3}</Format>
-                    <Selector>Item1,Item2,Item3,Item4</Selector>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:Take">
-                    <rx:Count>1</rx:Count>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="WorkflowOutput" />
-                </Nodes>
-                <Edges>
-                  <Edge From="0" To="4" Label="Source1" />
-                  <Edge From="1" To="4" Label="Source2" />
-                  <Edge From="2" To="4" Label="Source3" />
-                  <Edge From="3" To="4" Label="Source4" />
-                  <Edge From="4" To="5" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source1" />
-                </Edges>
-              </Workflow>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="FileName" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>RigConfig</Name>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="FrameRate" Selector="BehaviorBoard.CameraTriggerController.Trigger0Frequency" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="ffm:VideoWriter">
-              <ffm:FileName />
-              <ffm:Suffix>None</ffm:Suffix>
-              <ffm:Overwrite>false</ffm:Overwrite>
-              <ffm:FrameRate>50</ffm:FrameRate>
-              <ffm:OutputArguments>-loglevel error -nostats -c:v h264_qsv -preset veryfast -global_quality 20 -bf 0 -pix_fmt nv12</ffm:OutputArguments>
-            </Combinator>
-            </Expression>
-            <Expression xsi:type="WorkflowOutput" />
-            <Expression xsi:type="MemberSelector">
-              <Selector>Seconds</Selector>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Value.ChunkData.Timestamp</Selector>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Value.ChunkData.FrameID</Selector>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Zip" />
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>RigConfig</Name>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Camera.ExposureTime</Selector>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:WithLatestFrom" />
-            </Expression>
-            <Expression xsi:type="scr:ExpressionTransform">
-              <scr:Expression>new(
-            Item1.Item1 as Seconds,
-            Item1.Item2 as Timestamp,
-            Item1.Item3 as FrameID,
-            Item2 as ExposureTime)</scr:Expression>
-            </Expression>
-            <Expression xsi:type="GroupWorkflow">
-              <Name>FormatFileName</Name>
-              <Description>Generates PathPrefix\Cameras\VideoData_Camera1.csv.</Description>
-              <Workflow>
-                <Nodes>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>PathPrefix</Name>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="StringProperty">
-                    <Value>Cameras</Value>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="StringProperty">
-                    <Value>VideoData_Camera1</Value>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="StringProperty">
-                    <Value>csv</Value>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:Zip" />
-                  </Expression>
-                  <Expression xsi:type="Format">
-                    <Format>{0}\{1}\{2}.{3}</Format>
-                    <Selector>Item1,Item2,Item3,Item4</Selector>
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:Take">
-                    <rx:Count>1</rx:Count>
-                  </Combinator>
-                  </Expression>
-                  <Expression xsi:type="WorkflowOutput" />
-                </Nodes>
-                <Edges>
-                  <Edge From="0" To="4" Label="Source1" />
-                  <Edge From="1" To="4" Label="Source2" />
-                  <Edge From="2" To="4" Label="Source3" />
-                  <Edge From="3" To="4" Label="Source4" />
-                  <Edge From="4" To="5" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source1" />
-                </Edges>
-              </Workflow>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="FileName" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="io:CsvWriter">
-              <io:FileName />
-              <io:Append>false</io:Append>
-              <io:Overwrite>false</io:Overwrite>
-              <io:Suffix>None</io:Suffix>
-              <io:IncludeHeader>true</io:IncludeHeader>
-              <io:Selector />
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:SampleInterval">
-              <rx:Interval>PT0.2S</rx:Interval>
-            </Combinator>
-            </Expression>
-          </Nodes>
-          <Edges>
-            <Edge From="0" To="3" Label="Source1" />
-            <Edge From="1" To="2" Label="Source1" />
-            <Edge From="2" To="3" Label="Source2" />
-            <Edge From="3" To="4" Label="Source1" />
-            <Edge From="4" To="9" Label="Source1" />
-            <Edge From="5" To="6" Label="Source1" />
-            <Edge From="6" To="9" Label="Source2" />
-            <Edge From="7" To="8" Label="Source1" />
-            <Edge From="8" To="9" Label="Source3" />
-            <Edge From="9" To="10" Label="Source1" />
-            <Edge From="3" To="11" Label="Source1" />
-            <Edge From="3" To="12" Label="Source1" />
-            <Edge From="3" To="13" Label="Source1" />
-            <Edge From="11" To="14" Label="Source1" />
-            <Edge From="12" To="14" Label="Source2" />
-            <Edge From="13" To="14" Label="Source3" />
-            <Edge From="15" To="16" Label="Source1" />
-            <Edge From="14" To="17" Label="Source1" />
-            <Edge From="16" To="17" Label="Source2" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="11" Label="Source1" />
+            <Edge From="10" To="11" Label="Source2" />
+            <Edge From="12" To="14" Label="Source1" />
+            <Edge From="13" To="14" Label="Source2" />
+            <Edge From="14" To="15" Label="Source1" />
+            <Edge From="16" To="17" Label="Source1" />
             <Edge From="17" To="18" Label="Source1" />
-            <Edge From="19" To="20" Label="Source1" />
-            <Edge From="18" To="21" Label="Source1" />
-            <Edge From="20" To="21" Label="Source2" />
-            <Edge From="4" To="22" Label="Source1" />
+            <Edge From="18" To="19" Label="Source1" />
           </Edges>
         </Workflow>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>PathPrefix</Name>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:SubscribeWhen" />
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>BehaviorEvents</Name>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>PathPrefix</Name>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:SubscribeWhen" />
-      </Expression>
-      <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:LogHarpDevice.bonsai">
-        <LogName>BehaviorBoard</LogName>
-      </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>PathPrefix</Name>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:Delay">
-          <rx:DueTime>PT0.5S</rx:DueTime>
-        </Combinator>
-      </Expression>
-      <Expression xsi:type="harp:CreateMessage">
-        <harp:MessageType>Write</harp:MessageType>
-        <harp:Payload xsi:type="harp:CreateOperationControlPayload">
-          <harp:OperationMode>Active</harp:OperationMode>
-          <harp:DumpRegisters>true</harp:DumpRegisters>
-          <harp:MuteReplies>false</harp:MuteReplies>
-          <harp:VisualIndicators>Off</harp:VisualIndicators>
-          <harp:OperationLed>Off</harp:OperationLed>
-          <harp:Heartbeat>Enabled</harp:Heartbeat>
-        </harp:Payload>
-      </Expression>
-      <Expression xsi:type="MulticastSubject">
-        <Name>BehaviorCommands</Name>
       </Expression>
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
       <Edge From="2" To="3" Label="Source1" />
-      <Edge From="3" To="4" Label="Source1" />
-      <Edge From="4" To="5" Label="Source1" />
-      <Edge From="5" To="16" Label="Source1" />
-      <Edge From="6" To="7" Label="Source1" />
-      <Edge From="7" To="8" Label="Source1" />
-      <Edge From="8" To="9" Label="Source1" />
-      <Edge From="9" To="16" Label="Source2" />
-      <Edge From="10" To="11" Label="Source1" />
-      <Edge From="11" To="12" Label="Source1" />
-      <Edge From="12" To="13" Label="Source1" />
-      <Edge From="13" To="16" Label="Source3" />
-      <Edge From="14" To="15" Label="Source1" />
-      <Edge From="15" To="16" Label="Source4" />
-      <Edge From="2" To="17" Label="Source1" />
-      <Edge From="6" To="17" Label="Source2" />
-      <Edge From="10" To="17" Label="Source3" />
-      <Edge From="14" To="18" Label="Source1" />
-      <Edge From="17" To="18" Label="Source2" />
-      <Edge From="18" To="19" Label="Source1" />
-      <Edge From="19" To="20" Label="Source1" />
-      <Edge From="20" To="21" Label="Source1" />
-      <Edge From="21" To="22" Label="Source1" />
-      <Edge From="23" To="24" Label="Source1" />
-      <Edge From="24" To="25" Label="Source1" />
-      <Edge From="26" To="27" Label="Source1" />
-      <Edge From="27" To="28" Label="Source1" />
-      <Edge From="29" To="31" Label="Source1" />
-      <Edge From="30" To="31" Label="Source2" />
-      <Edge From="31" To="32" Label="Source1" />
-      <Edge From="32" To="33" Label="Source1" />
-      <Edge From="33" To="34" Label="Source1" />
-      <Edge From="34" To="36" Label="Source1" />
-      <Edge From="35" To="36" Label="Source2" />
-      <Edge From="37" To="39" Label="Source1" />
-      <Edge From="38" To="39" Label="Source2" />
-      <Edge From="39" To="40" Label="Source1" />
-      <Edge From="40" To="41" Label="Source1" />
-      <Edge From="42" To="43" Label="Source1" />
-      <Edge From="43" To="45" Label="Source1" />
-      <Edge From="44" To="45" Label="Source2" />
-      <Edge From="46" To="48" Label="Source1" />
-      <Edge From="47" To="48" Label="Source2" />
-      <Edge From="48" To="49" Label="Source1" />
-      <Edge From="50" To="51" Label="Source1" />
-      <Edge From="51" To="52" Label="Source1" />
-      <Edge From="52" To="53" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
