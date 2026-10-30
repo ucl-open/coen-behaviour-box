@@ -39,7 +39,7 @@ namespace UclOpenCoenBehaviourBox
             var parts = (name ?? string.Empty).Split('-');
             if (parts.Length != 2 || parts[0].Length == 0 || parts[1].Length == 0)
             {
-                throw new ArgumentException($"RigDevice's Name is '{name}'; it must be Kind-Instance, such as Camera-Box.");
+                throw new ArgumentException(string.Format("RigDevice's Name is '{0}'; it must be Kind-Instance, such as Camera-Box.", name));
             }
 
             var kind = LowerFirst(parts[0]);
@@ -50,12 +50,14 @@ namespace UclOpenCoenBehaviourBox
                 return device;
             }
 
+            // string.Format, not $"...": Bonsai compiles Extensions with the framework's csc, which is C# 5.
             var has = entries == null || entries.Count == 0
-                ? $"Its {kind} section has no entries."
-                : $"Its {kind} entries: {string.Join(", ", entries.Keys.OrderBy(k => k, StringComparer.Ordinal))}.";
-            throw new KeyNotFoundException(
-                $"rig.yml has no {kind} named '{entry}', which this workflow records as {name}. {has} " +
-                $"Add {entry} under {kind}: in this rig's rig.yml, or correct the name there.");
+                ? string.Format("Its {0} section has no entries.", kind)
+                : string.Format("Its {0} entries: {1}.", kind, string.Join(", ", entries.Keys.OrderBy(k => k, StringComparer.Ordinal)));
+            throw new KeyNotFoundException(string.Format(
+                "rig.yml has no {0} named '{1}', which this workflow records as {2}. {3} " +
+                "Add {1} under {0}: in this rig's rig.yml, or correct the name there.",
+                kind, entry, name, has));
         }
 
         static string LowerFirst(string text)
