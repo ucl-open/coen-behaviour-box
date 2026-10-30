@@ -13,11 +13,13 @@ namespace UclOpenCoenBehaviourBox
     /// for the names it drives, and the name in the data is the kind and the entry joined by a
     /// hyphen (Camera-Box). An entry the workflow does not ask for is ignored. A name it asks
     /// for and rig.yml does not have stops the workflow, saying which entries the file has,
-    /// where Bonsai's Index would say only that the key was not present.
+    /// where Bonsai's Index would say only that the key was not present. The output carries the
+    /// name with the settings, so a device's files take their name from the same place as its
+    /// lookup and the name is typed once in the workflow.
     /// </summary>
     [Combinator]
     [WorkflowElementCategory(ElementCategory.Transform)]
-    [Description("Takes one device's settings from rig.yml by its name, Kind-Instance: Camera-Box is camera: box:. Stops the workflow, naming the entries rig.yml has, if it has none by that name.")]
+    [Description("Takes one device's settings from rig.yml by its name, Kind-Instance: Camera-Box is camera: box:. Outputs the name with them, for naming the device's files. Stops the workflow, naming the entries rig.yml has, if it has none by that name.")]
     public class RigDevice
     {
         [Description("The device's name in the data: its kind and its entry in rig.yml, joined by a hyphen, such as BehaviorBoard-Main.")]
@@ -25,10 +27,10 @@ namespace UclOpenCoenBehaviourBox
 
         // Dictionary rather than IDictionary: it is the generated classes' own type, which
         // Bonsai has to match to infer TDevice.
-        public IObservable<TDevice> Process<TDevice>(IObservable<Dictionary<string, TDevice>> source)
+        public IObservable<NamedDevice<TDevice>> Process<TDevice>(IObservable<Dictionary<string, TDevice>> source)
         {
             var name = Name;
-            return source.Select(entries => Find(entries, name));
+            return source.Select(entries => new NamedDevice<TDevice>(name, Find(entries, name)));
         }
 
         /// <summary>The entry named by Name, or an exception that says what rig.yml has instead.</summary>
@@ -60,5 +62,21 @@ namespace UclOpenCoenBehaviourBox
         {
             return char.ToLowerInvariant(text[0]) + text.Substring(1);
         }
+    }
+
+    /// <summary>A device's name in the data, Kind-Instance, and its settings from rig.yml.</summary>
+    public class NamedDevice<TDevice>
+    {
+        public NamedDevice(string name, TDevice settings)
+        {
+            Name = name;
+            Settings = settings;
+        }
+
+        [Description("The device's name in the data, such as Camera-Box: its folder and the start of its files' names.")]
+        public string Name { get; private set; }
+
+        [Description("The device's entry in rig.yml.")]
+        public TDevice Settings { get; private set; }
     }
 }
