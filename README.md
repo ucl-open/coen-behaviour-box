@@ -41,7 +41,7 @@ Each device's name is typed once in the workflow, as the `Name` of its `RigDevic
 
 A second camera, `Camera-Face` on the board's second trigger, takes these, each by hand: a `face:` entry under `camera:` in every rig's `rig.yml`; in `RigConfig`, another `RigDevice` and `AsyncSubject` named `Camera-Face` off the `Camera` selector; in `Hardware`, a copy of the `Camera` group subscribing to `Camera-Face`, parsing `TimestampedCamera1Frame` and publishing `FrameEvents-Face`; in `Logging`, a copy of `RecordVideo` subscribing to `FrameEvents-Face`, with its three `Camera-Box` subscriptions in `CameraChunk` changed to `Camera-Face` and `Trigger0Frequency` changed to `Trigger1Frequency` in `RunLengthToFrames` and the video's `FrameRate`. A copy that misses one of the `Camera-Box` subscriptions records under the wrong name, and nothing catches it. Also open-rigs#4: `CameraTriggerController`'s `StartCameras` does not start the second output and its Camera1 subject parses the Camera0 register, so the second camera gets no triggers until that is fixed.
 
-The workflow's top level follows the open-rigs layout: `RigConfig` (reads `rig.yml` and takes out `BehaviorBoard-Main` and `Camera-Box`), `Initialization` (the run settings), `Hardware` (board and camera, each configured from its entry in `rig.yml`) and `Logging` (session folder, video, board log).
+The workflow's top level follows the open-rigs layout: `RigConfig` (reads `rig.yml` and takes out `BehaviorBoard-Main` and `Camera-Box`), `Initialization` (the run settings), `Hardware` (board and camera, each configured from its entry in `rig.yml`), `Logging` (session folder, video, board log) and `LiveView` (streams the recording; below).
 
 Each session writes to `<rootPath>\sub-<subject>\ses-<session>_date-<date>\`, one folder per device named as the device, and each device's files as `<Device>_<DateTime>` in one-hour chunks on the board's Harp clock, as the Open Rigs logging spec (`ucl-open/specs/logging.md`) has it. `<DateTime>` is the chunk's start, so a run crossing the hour has two of each file:
 
@@ -53,6 +53,16 @@ Each session writes to `<rootPath>\sub-<subject>\ses-<session>_date-<date>\`, on
 Sessions before 30 Oct 2026 have `Cameras\VideoData_Camera1.avi` and `.csv`, one file per run, and `BehaviorBoard\BehaviorBoard_*`.
 
 If no frame arrives within 15 s of Start, the workflow stops with "The operation has timed out." (usually the trigger cable).
+
+## Live view
+
+While it runs, the workflow streams over ZeroMQ with `OpenRigs.Streaming`, for rig-setup's machines window: data on TCP 5556, video on 5558, bound on every interface (rig-setup's `firewall:live-view` opens both to the local subnet). Each message is a topic `<MACHINE-NAME>/<stream>/`, a JSON header (`rigId`, `sessionKey` `sub-<subject>/ses-<session>_date-<start>`, `stream`, `index`, `enc`, `type`) and the payload. Streams:
+
+- `video`: the recorded frames, taken after the video writer, 5 a second, 320 x 240 JPEG.
+- `elapsed`: seconds of video recorded so far (frames / `trigger0Frequency`), once a second; it stops when the run length is reached.
+- `wheel`: the raw encoder count (`AnalogData.Encoder`, 16-bit, wrapping), 10 times a second.
+
+Viewing never reaches the recording: a subscriber that is slow or joins late loses its own messages (the header's `index` shows the gap), and with none connected the messages are dropped. Another workflow already streaming on these ports stops this one at Start (`AddressAlreadyInUseException`). To watch from another machine without the window, `uv run --no-project --with pyzmq python scripts\receive-stream.py 30 <rig>` prints what arrived in 30 s per stream.
 
 ## Checking a change without the rig
 

@@ -1,6 +1,6 @@
 # Locally built OpenRigs packages
 
-`local_packages/` holds `OpenRigs.Core`, `OpenRigs.Devices`, `OpenRigs.Logging` and `OpenRigs.Video` at version `0.1.0-bbox.1`, built here because open-rigs has not published a release yet (ucl-open/ucl-open#12). The version is distinct from any upstream one, so a later restore never confuses the two.
+`local_packages/` holds `OpenRigs.Core`, `OpenRigs.Devices`, `OpenRigs.Logging`, `OpenRigs.Streaming` and `OpenRigs.Video` at version `0.1.0-bbox.1`, built here because open-rigs has not published a release yet (ucl-open/ucl-open#12). The version is distinct from any upstream one, so a later restore never confuses the two.
 
 Base: `open-rigs/open-rigs` branch `rig-config-resolver` at `3788bfbb0946bd5a8e5ade321da9815cc1ff1c07` (main plus the per-machine config operators `ResolveRigConfigDirectory`, `ReadRigConfig` and `ResolveRigFile`).
 
@@ -17,7 +17,7 @@ Build:
 git clone https://github.com/open-rigs/open-rigs; cd open-rigs
 git checkout 3788bfbb0946bd5a8e5ade321da9815cc1ff1c07
 git apply <this repo>/patches/open-rigs-66-full-frame.patch <this repo>/patches/open-rigs-67-copy-chunkdata.patch
-foreach ($p in 'Core','Devices','Logging','Video') {
+foreach ($p in 'Core','Devices','Logging','Streaming','Video') {
     dotnet pack "src/OpenRigs.$p/OpenRigs.$p.csproj" -c Release -p:Version=0.1.0-bbox.1 -o <this repo>/local_packages
 }
 ```
@@ -29,7 +29,10 @@ SHA-256 of the packages as committed (built with .NET SDK 8.0.424 on 28 Oct 2026
 82ae3d13854ff68010ba59c81d65f6d9be7d0039fc39a2912f3c8ca567c9cbca  OpenRigs.Devices.0.1.0-bbox.1.nupkg
 890852b421dad5438ec67082e61f51785090a7c0e1ec829309c918b11ca18a20  OpenRigs.Logging.0.1.0-bbox.1.nupkg
 26b0e832a0b4bd83adf8533cf62c12f6995b9b8a6761c604cd62b6522661fe2a  OpenRigs.Video.0.1.0-bbox.1.nupkg
+3926eb366c51c4197ac28f6eb8aa338cdd698bc6cc5f60f2335ad1ff16f57f4b  OpenRigs.Streaming.0.1.0-bbox.1.nupkg
 ```
+
+`OpenRigs.Streaming` was added on 30 Oct 2026 for the live view, built the same way with the same SDK; neither patch touches it, so it is upstream's `src/OpenRigs.Streaming` at the base commit, unchanged on open-rigs `main` that day. It declares Bonsai.Dsp and Bonsai.Vision 2.9.0 and Bonsai.Scripting.Expressions 2.10.0, newer than this environment's 2.8.0. Bonsai restores only what `Bonsai.config` lists, at the listed versions, as it already does for `OpenRigs.Logging`'s Bonsai.System 2.9.0 (2.8.1 here), so the restore added this one package and nothing else, and the live view runs on the 2.8.0 assemblies (`BACKLOG.md`, "Live view").
 
 ## Bonsai.FFmpeg 0.2.0-uniquepipe
 

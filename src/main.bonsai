@@ -681,6 +681,9 @@
                 <Property Name="LogName" Selector="Name" />
               </PropertyMappings>
             </Expression>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>RecordedFrames</Name>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="2" Label="Source1" />
@@ -701,6 +704,106 @@
             <Edge From="18" To="19" Label="Source1" />
             <Edge From="20" To="21" Label="Source1" />
             <Edge From="21" To="15" Label="Source2" />
+            <Edge From="11" To="22" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>LiveView</Name>
+        <Description>Streams the recording over ZeroMQ for the machines window's live view (OpenRigs.Streaming), publishing on every interface: data on TCP 5556, video on 5558. Every message carries RigId, the machine's name, and the session key sub-&lt;SubjectId&gt;/ses-&lt;SessionId&gt;_date-&lt;start&gt;. Streams: video, the recorded frames after the video writer at 5 per second, 320 x 240 JPEG; elapsed, the seconds of video recorded so far (frames / trigger frequency), once a second; wheel, the raw encoder count from AnalogData, 10 times a second. A viewer only listens, and a slow or late one loses its own messages without slowing the rig; with none connected the messages are dropped. A port already in use (another workflow streaming) stops the workflow at Start with NetMQ's AddressAlreadyInUseException, before the camera is triggered.</Description>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RunSettings</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="io:GetEnvironmentVariable">
+                <io:Name>COMPUTERNAME</io:Name>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Zip" />
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="SubjectId" Selector="Item1.Item1" />
+                <Property Name="SessionId" Selector="Item1.Item2" />
+                <Property Name="RigId" Selector="Item2" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Streaming:StreamController.bonsai">
+              <RigId>UNMAPPED</RigId>
+              <SubjectId>UNMAPPED</SubjectId>
+              <SessionId>UNMAPPED</SessionId>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RecordedFrames</Name>
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Streaming:PackVideoMessage.bonsai">
+              <StreamName>video</StreamName>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RecordedFrames</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:ElementIndex" />
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>Index</Selector>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:SampleInterval">
+                <rx:Interval>PT1S</rx:Interval>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>BehaviorBoard-Main</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:WithLatestFrom" />
+            </Expression>
+            <Expression xsi:type="scr:ExpressionTransform">
+              <scr:Name>FramesToSeconds</scr:Name>
+              <scr:Expression>(Item1 + 1) / Convert.ToDouble(Item2.Settings.CameraTriggerController.Trigger0Frequency)</scr:Expression>
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Streaming:PackDataMessage.bonsai">
+              <StreamName>elapsed</StreamName>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>BehaviorEvents</Name>
+            </Expression>
+            <Expression xsi:type="beh:Parse">
+              <harp:Register xsi:type="beh:AnalogData" />
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>Encoder</Selector>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:SampleInterval">
+                <rx:Interval>PT0.1S</rx:Interval>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Streaming:PackDataMessage.bonsai">
+              <StreamName>wheel</StreamName>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="2" Label="Source1" />
+            <Edge From="1" To="2" Label="Source2" />
+            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="5" To="6" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="10" Label="Source1" />
+            <Edge From="10" To="12" Label="Source1" />
+            <Edge From="11" To="12" Label="Source2" />
+            <Edge From="12" To="13" Label="Source1" />
+            <Edge From="13" To="14" Label="Source1" />
+            <Edge From="15" To="16" Label="Source1" />
+            <Edge From="16" To="17" Label="Source1" />
+            <Edge From="17" To="18" Label="Source1" />
+            <Edge From="18" To="19" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>

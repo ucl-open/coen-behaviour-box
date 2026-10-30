@@ -2,7 +2,7 @@
 
 `local_packages/` carries packages that are not on nuget.org. Each is redistributed under its own licence, given below.
 
-## OpenRigs.Core, OpenRigs.Devices, OpenRigs.Logging, OpenRigs.Video
+## OpenRigs.Core, OpenRigs.Devices, OpenRigs.Logging, OpenRigs.Streaming, OpenRigs.Video
 
 `local_packages/OpenRigs.*.0.1.0-bbox.1.nupkg` are built from [open-rigs](https://github.com/open-rigs/open-rigs) at `3788bfbb0946bd5a8e5ade321da9815cc1ff1c07` with the two camera patches in `patches/` (see `patches/README.md`). They are redistributed under the open-rigs BSD 3-Clause License:
 
