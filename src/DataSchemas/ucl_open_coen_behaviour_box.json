@@ -358,13 +358,20 @@
           "type": "string"
         },
         "behaviorBoard": {
-          "$ref": "#/$defs/BehaviorBoard",
-          "description": "The Harp Behavior board: serial port, camera trigger on Trigger0 and running wheel on encoder port 2."
+          "additionalProperties": {
+            "$ref": "#/$defs/BehaviorBoard"
+          },
+          "description": "Harp Behavior boards by name. This workflow drives main (BehaviorBoard-Main): serial port, camera trigger on Trigger0 and running wheel on encoder port 2.",
+          "title": "BehaviorBoard",
+          "type": "object"
         },
         "camera": {
-          "$ref": "#/$defs/SpinnakerCamera",
-          "description": "The triggered Spinnaker camera. Its frame rate is the board's trigger0_frequency.",
-          "title": "Camera"
+          "additionalProperties": {
+            "$ref": "#/$defs/SpinnakerCamera"
+          },
+          "description": "Triggered Spinnaker cameras by name. This workflow drives box (Camera-Box), whose frame rate is the board's trigger0_frequency.",
+          "title": "Camera",
+          "type": "object"
         }
       },
       "required": [

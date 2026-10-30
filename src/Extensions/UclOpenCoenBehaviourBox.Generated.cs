@@ -1123,15 +1123,15 @@ namespace UclOpenCoenBehaviourBox
     
         private string _version;
     
-        private BehaviorBoard _behaviorBoard;
+        private System.Collections.Generic.Dictionary<string, BehaviorBoard> _behaviorBoard;
     
-        private SpinnakerCamera _camera;
+        private System.Collections.Generic.Dictionary<string, SpinnakerCamera> _camera;
     
         public UclOpenCoenBehaviourBoxRig()
         {
             _version = "0.0.0-rc1";
-            _behaviorBoard = new BehaviorBoard();
-            _camera = new SpinnakerCamera();
+            _behaviorBoard = new System.Collections.Generic.Dictionary<string, BehaviorBoard>();
+            _camera = new System.Collections.Generic.Dictionary<string, SpinnakerCamera>();
         }
     
         protected UclOpenCoenBehaviourBoxRig(UclOpenCoenBehaviourBoxRig other)
@@ -1175,14 +1175,14 @@ namespace UclOpenCoenBehaviourBox
         }
     
         /// <summary>
-        /// The Harp Behavior board: serial port, camera trigger on Trigger0 and running wheel on encoder port 2.
+        /// Harp Behavior boards by name. This workflow drives main (BehaviorBoard-Main): serial port, camera trigger on Trigger0 and running wheel on encoder port 2.
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         [Newtonsoft.Json.JsonPropertyAttribute("behaviorBoard", Required=Newtonsoft.Json.Required.Always)]
         [YamlDotNet.Serialization.YamlMemberAttribute(Alias="behaviorBoard")]
-        [System.ComponentModel.DescriptionAttribute("The Harp Behavior board: serial port, camera trigger on Trigger0 and running whee" +
-            "l on encoder port 2.")]
-        public BehaviorBoard BehaviorBoard
+        [System.ComponentModel.DescriptionAttribute("Harp Behavior boards by name. This workflow drives main (BehaviorBoard-Main): ser" +
+            "ial port, camera trigger on Trigger0 and running wheel on encoder port 2.")]
+        public System.Collections.Generic.Dictionary<string, BehaviorBoard> BehaviorBoard
         {
             get
             {
@@ -1195,14 +1195,14 @@ namespace UclOpenCoenBehaviourBox
         }
     
         /// <summary>
-        /// The triggered Spinnaker camera. Its frame rate is the board's trigger0_frequency.
+        /// Triggered Spinnaker cameras by name. This workflow drives box (Camera-Box), whose frame rate is the board's trigger0_frequency.
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         [Newtonsoft.Json.JsonPropertyAttribute("camera", Required=Newtonsoft.Json.Required.Always)]
         [YamlDotNet.Serialization.YamlMemberAttribute(Alias="camera")]
-        [System.ComponentModel.DescriptionAttribute("The triggered Spinnaker camera. Its frame rate is the board\'s trigger0_frequency." +
-            "")]
-        public SpinnakerCamera Camera
+        [System.ComponentModel.DescriptionAttribute("Triggered Spinnaker cameras by name. This workflow drives box (Camera-Box), whose" +
+            " frame rate is the board\'s trigger0_frequency.")]
+        public System.Collections.Generic.Dictionary<string, SpinnakerCamera> Camera
         {
             get
             {

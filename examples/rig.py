@@ -15,8 +15,10 @@ HEADER = """\
 # config/rig-template.yml by scripts/deploy.ps1: fill in every CHANGE-ME value there, and anything
 # else that differs on this rig. Per-rig values are never committed. To change the template
 # itself, edit examples/rig.py and run it again rather than editing config/rig-template.yml.
-# The frame rate is behaviorBoard.cameraTriggerController.trigger0Frequency; camera.triggerFrequency
-# and trigger1Frequency are not used by this rig.
+# Each device sits under its kind by name: the workflow drives behaviorBoard: main:
+# (BehaviorBoard-Main in the data) and camera: box: (Camera-Box), and stops at startup if either
+# is missing. The frame rate is behaviorBoard.main.cameraTriggerController.trigger0Frequency;
+# camera.box.triggerFrequency and trigger1Frequency are not used by this rig.
 """
 
 # Placeholder values only: they must look wrong until a rig fills them in. The trigger rate,
@@ -24,12 +26,16 @@ HEADER = """\
 # hardware differs.
 rig = UclOpenCoenBehaviourBoxRig(
     root_path="C:\\Data\\CHANGE-ME",
-    behavior_board=BehaviorBoard(
-        port_name="COM-CHANGE-ME",
-        camera_trigger_controller=CameraTriggerController(trigger0_frequency=50, trigger1_frequency=50),
-        running_wheel=RunningWheel(counts_per_rev=4096, wheel_diameter_mm=150),
-    ),
-    camera=SpinnakerCamera(serial_number="CHANGE-ME", exposure_time=10000, gain=5, binning=1, trigger_frequency=50),
+    behavior_board={
+        "main": BehaviorBoard(
+            port_name="COM-CHANGE-ME",
+            camera_trigger_controller=CameraTriggerController(trigger0_frequency=50, trigger1_frequency=50),
+            running_wheel=RunningWheel(counts_per_rev=4096, wheel_diameter_mm=150),
+        )
+    },
+    camera={
+        "box": SpinnakerCamera(serial_number="CHANGE-ME", exposure_time=10000, gain=5, binning=1, trigger_frequency=50)
+    },
 )
 
 
