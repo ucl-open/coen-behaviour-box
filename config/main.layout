@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VisualizerLayout Version="2.9.0">
+  <WindowSettings Index="5">
+    <Visible>false</Visible>
+    <NestedLayout>
+      <WindowSettings Index="9">
+        <Visible>false</Visible>
+        <NestedLayout>
+          <WindowSettings Index="9">
+            <Location>
+              <X>100</X>
+              <Y>100</Y>
+            </Location>
+            <Size>
+              <Width>736</Width>
+              <Height>591</Height>
+            </Size>
+            <VisualizerTypeName>Bonsai.Vision.Design.IplImageVisualizer</VisualizerTypeName>
+            <VisualizerSettings>
+              <IplImageVisualizer />
+            </VisualizerSettings>
+          </WindowSettings>
+        </NestedLayout>
+      </WindowSettings>
+    </NestedLayout>
+  </WindowSettings>
+</VisualizerLayout>

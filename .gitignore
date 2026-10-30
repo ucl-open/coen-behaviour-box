@@ -12,6 +12,8 @@ Bonsai/Settings/
 *.exe
 *.exe.settings
 *.layout
+# The default editor layout deploy.ps1 gives a machine that has none (camera preview).
+!config/main.layout
 *.editor
 local
 .venv

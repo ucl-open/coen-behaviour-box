@@ -13,16 +13,21 @@
                  xmlns:spk="clr-namespace:Bonsai.Spinnaker;assembly=Bonsai.Spinnaker"
                  xmlns:orc="clr-namespace:OpenRigs.Core;assembly=OpenRigs.Core"
                  xmlns:orv="clr-namespace:OpenRigs.Video;assembly=OpenRigs.Video"
+                 xmlns:zmq="clr-namespace:Bonsai.ZeroMQ;assembly=Bonsai.ZeroMQ"
+                 xmlns:netmq="clr-namespace:NetMQ;assembly=NetMQ"
                  xmlns:ext="clr-namespace:UclOpenCoenBehaviourBox;assembly=Extensions"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="ConfigRoot" />
+        <Property Name="ExposureTime" DisplayName="ExposureTime" Description="Camera exposure in microseconds, in place of rig.yml's; at most the trigger period less 1,000 (19,000 at 50 Hz), or the workflow stops at Start. Stays set for later runs until cleared. Blank: rig.yml's camera exposureTime." />
+        <Property Name="Gain" DisplayName="Gain" Description="Camera gain in dB, in place of rig.yml's; not recorded in the session. Stays set for later runs until cleared. Blank: rig.yml's camera gain." />
+        <Property Name="Binning" DisplayName="Binning" Description="Camera binning, 1 for full resolution, in place of rig.yml's. Stays set for later runs until cleared. Blank: rig.yml's camera binning." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>RigConfig</Name>
-        <Description>Reads &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml once, into the RigConfig subject, then takes out the two devices this workflow drives by name, each into a subject of that name: BehaviorBoard-Main (behaviorBoard: main:) and Camera-Box (camera: box:). Each subject holds the device's Name and its Settings from rig.yml; the name is typed once, in RigDevice, and the device's files take theirs from the subject's Name, so the entry read and the files written cannot disagree. A second camera is another RigDevice and subject, such as Camera-Face. rig.yml is where each name is bound to its hardware (port, serial number); the name is what the data is called. Fails at startup if the machine has no directory or file, or if rig.yml has no entry by either name, saying which entries it has; other entries are ignored.</Description>
+        <Description>Reads &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml once, into the RigConfig subject, then takes out the two devices this workflow drives by name, each into a subject of that name: BehaviorBoard-Main (behaviorBoard: main:) and Camera-Box (camera: box:). Each subject holds the device's Name and its Settings from rig.yml; the name is typed once, in RigDevice, and the device's files take theirs from the subject's Name, so the entry read and the files written cannot disagree. A second camera is another RigDevice and subject, such as Camera-Face. rig.yml is where each name is bound to its hardware (port, serial number); the name is what the data is called. Fails at startup if the machine has no directory or file, or if rig.yml has no entry by either name, saying which entries it has; other entries are ignored. The camera's ExposureTime, Gain and Binning can be set for one run from this workflow's properties (CameraOverrides); blank keeps rig.yml's, and Camera-Box carries the values in use, so the camera and the CSV's ExposureTime column agree. ExposureFitsTrigger then stops the workflow at Start if the exposure in use, plus 1000 us for the camera, is longer than the board's Trigger0 period (19,000 us at 50 Hz): the camera would skip triggers and every frame would get the wrong time.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -69,6 +74,30 @@
             <Expression xsi:type="rx:AsyncSubject">
               <Name>Camera-Box</Name>
             </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="ExposureTime" />
+              <Property Name="Gain" />
+              <Property Name="Binning" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="ext:CameraOverrides">
+                <ext:ExposureTime xsi:nil="true" />
+                <ext:Gain xsi:nil="true" />
+                <ext:Binning xsi:nil="true" />
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>BehaviorBoard-Main</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Zip" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="ext:ExposureFitsTrigger">
+                <ext:TriggerOutput>0</ext:TriggerOutput>
+                <ext:MarginMicroseconds>1000</ext:MarginMicroseconds>
+              </Combinator>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
@@ -81,7 +110,12 @@
             <Edge From="7" To="8" Label="Source1" />
             <Edge From="5" To="9" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
-            <Edge From="10" To="11" Label="Source1" />
+            <Edge From="10" To="13" Label="Source1" />
+            <Edge From="12" To="13" Label="Source2" />
+            <Edge From="13" To="15" Label="Source1" />
+            <Edge From="14" To="15" Label="Source2" />
+            <Edge From="15" To="16" Label="Source1" />
+            <Edge From="16" To="11" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -174,7 +208,7 @@
           <Nodes>
             <Expression xsi:type="GroupWorkflow">
               <Name>BehaviorBoard</Name>
-              <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel's encoder on port 2 (inline, in Position mode, logged raw). Triggers start 5 s after RunSettings (at Start), so the camera is armed first.</Description>
+              <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel's encoder on port 2 (inline, in Position mode, logged raw). Clock sets the board's clock to UTC when it connects. Triggers start 5 s after RunSettings (at Start), so the camera is armed first.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -279,6 +313,65 @@
                   <Expression xsi:type="MulticastSubject">
                     <Name>StartCameras</Name>
                   </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Clock</Name>
+                    <Description>Sets the board's clock to the PC's UTC time (SynchronizeTimestamp, whole seconds) as soon as the board sends its first message, and publishes the board's reply as BoardClockSet. Without it the board counts from power-on, and Harp timestamps, the CSV Seconds column and every file name follow that count (1904-01-04T17-00-00 and so on). The board's own open-time register dump comes before this write and is not logged; Logging waits for BoardClockSet before it logs the board and asks for the dump it keeps. If the board's reply has not come 10 s after Start, Watchdog stops the workflow with a message saying so, rather than record a whole session with no board files; triggers start 5 s after Start, so the session folder then holds a few seconds of video and CSV and no board files. (4 s stopped every run: Watchdog's time counts from the workflow's subscription, before the config and camera are up. In 35 sessions on 30 Oct 2026 the board's log began about 3.9 s before the first trigger, so the clock is set well before any frame.)</Description>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>BehaviorEvents</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Take">
+                            <rx:Count>1</rx:Count>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="harp:SynchronizeTimestamp" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>BehaviorCommands</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>BehaviorEvents</Name>
+                        </Expression>
+                        <Expression xsi:type="harp:FilterRegister">
+                          <harp:FilterType>Include</harp:FilterType>
+                          <harp:Register xsi:type="harp:TimestampSeconds" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="harp:FilterMessageType">
+                            <harp:FilterType>Include</harp:FilterType>
+                            <harp:MessageType>Write</harp:MessageType>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Take">
+                            <rx:Count>1</rx:Count>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="rx:AsyncSubject">
+                          <Name>BoardClockSet</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="ext:Watchdog">
+                            <ext:DueTime>PT10S</ext:DueTime>
+                            <ext:Message>The board did not confirm within 10 s of Start that its clock was set, so nothing from the board is logged. Either its messages are not reaching the PC or the board is not responding. Check the board's USB cable and power (switch it off and on if it is powered), then Start again. The session folder holds a few seconds of video and CSV and no board files.</ext:Message>
+                          </Combinator>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="9" Label="Source1" />
+                        <Edge From="9" To="7" Label="Source1" />
+                        <Edge From="7" To="8" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
@@ -293,7 +386,7 @@
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>Camera</Name>
-              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Nothing subscribes until RunSettings is published at Start; the Timeout then stops the workflow with &quot;The operation has timed out.&quot; if no frame arrives for 15 s (usually the trigger cable).</Description>
+              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Nothing subscribes until RunSettings is published at Start; Watchdog then stops the workflow with a message of its own if no frame arrives for 15 s (usually the trigger cable).</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -330,9 +423,10 @@
                   </Combinator>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:Timeout">
-                    <rx:DueTime>PT15S</rx:DueTime>
-                  </Combinator>
+                    <Combinator xsi:type="ext:Watchdog">
+                      <ext:DueTime>PT15S</ext:DueTime>
+                      <ext:Message>No frame from the camera for 15 s, so the run was stopped. Usually the trigger cable from the board's output 0 to the camera; also check the camera's USB cable. Then Start again.</ext:Message>
+                    </Combinator>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>RunSettings</Name>
@@ -363,7 +457,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Logging</Name>
-        <Description>Waits for RunSettings, then LogController creates the session folder (PathPrefix). Once it exists: the video and its CSV, every Behavior board message, and a register dump so the board log records the board's settings. Each device logs into a folder of its own name, taken from its subject's Name (BehaviorBoard-Main, Camera-Box), as &lt;Name&gt;_&lt;DateTime&gt; files in one-hour chunks on the board's Harp clock (the Open Rigs logging spec).</Description>
+        <Description>Waits for RunSettings, then LogController creates the session folder (PathPrefix). Once it exists: the video and its CSV, and, once the board's clock is also set (BoardClockSet, from Hardware > BehaviorBoard > Clock), every Behavior board message and a register dump so the board log records the board's settings. The board's own open-time dump, before the clock is set, is not logged. Each device logs into a folder of its own name, taken from its subject's Name (BehaviorBoard-Main, Camera-Box), as &lt;Name&gt;_&lt;DateTime&gt; files in one-hour chunks on the board's Harp clock (the Open Rigs logging spec).</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="SubscribeSubject">
@@ -403,7 +497,7 @@
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>RecordVideo</Name>
-              <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records the run length's worth of frames (RunLengthToFrames), split into one-hour chunks on the frames' Harp time (GroupByTime, as the board's log is), each chunk to &lt;Name&gt;\&lt;Name&gt;_&lt;DateTime&gt;.avi and .csv, Name being the camera's from its subject (Camera-Box), named by OpenRigs.Logging's FormatFileName after the chunk's start as the board's files are. CSV columns, as av-dome writes for its cameras: Seconds (Harp time of the frame's trigger), Timestamp and FrameID (camera), ExposureTime. A run crossing the hour gives two pairs; one ffmpeg closes and the next opens there. The video is H.264 through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, which av-dome and LogVideo use, fell behind on the N150 and crashed long sessions). ExposureTime is the configured value, because OpenRigs.Video's frame does not carry the camera's. Wait for ffmpeg.exe to exit before closing Bonsai.</Description>
+              <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records the run length's worth of frames (RunLengthToFrames), split into one-hour chunks on the frames' Harp time (GroupByTime, as the board's log is), each chunk to &lt;Name&gt;\&lt;Name&gt;_&lt;DateTime&gt;.avi and .csv, Name being the camera's from its subject (Camera-Box), named by OpenRigs.Logging's FormatFileName after the chunk's start as the board's files are. CSV columns, as av-dome writes for its cameras: Seconds (Harp time of the frame's trigger), Timestamp and FrameID (camera), ExposureTime. A run crossing the hour gives two pairs; one ffmpeg closes and the next opens there. The video is H.264 through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, which av-dome and LogVideo use, fell behind on the N150 and crashed long sessions). ExposureTime is the configured value, because OpenRigs.Video's frame does not carry the camera's. Wait for ffmpeg.exe to exit before closing Bonsai. SampleInterval is the camera preview, 5 frames a second, which config\main.layout opens at Start. RecordedFrames carries the frames after the video writer, for LiveView; publishing it from Logging instead stopped the preview window from opening (30 Oct 2026, cause not found).</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -619,6 +713,9 @@
                     <rx:Interval>PT0.2S</rx:Interval>
                   </Combinator>
                   </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>RecordedFrames</Name>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="3" Label="Source1" />
@@ -630,6 +727,7 @@
                   <Edge From="6" To="7" Label="Source1" />
                   <Edge From="3" To="8" Label="Source1" />
                   <Edge From="8" To="9" Label="Source1" />
+                  <Edge From="6" To="10" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -681,8 +779,17 @@
                 <Property Name="LogName" Selector="Name" />
               </PropertyMappings>
             </Expression>
-            <Expression xsi:type="rx:PublishSubject">
-              <Name>RecordedFrames</Name>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>BoardClockSet</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:SubscribeWhen" />
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>BoardClockSet</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:SubscribeWhen" />
             </Expression>
           </Nodes>
           <Edges>
@@ -696,45 +803,94 @@
             <Edge From="8" To="9" Label="Source1" />
             <Edge From="9" To="11" Label="Source1" />
             <Edge From="10" To="11" Label="Source2" />
-            <Edge From="12" To="14" Label="Source1" />
+            <Edge From="12" To="23" Label="Source1" />
+            <Edge From="22" To="23" Label="Source2" />
+            <Edge From="23" To="14" Label="Source1" />
             <Edge From="13" To="14" Label="Source2" />
             <Edge From="14" To="15" Label="Source1" />
-            <Edge From="16" To="17" Label="Source1" />
+            <Edge From="16" To="25" Label="Source1" />
+            <Edge From="24" To="25" Label="Source2" />
+            <Edge From="25" To="17" Label="Source1" />
             <Edge From="17" To="18" Label="Source1" />
             <Edge From="18" To="19" Label="Source1" />
             <Edge From="20" To="21" Label="Source1" />
             <Edge From="21" To="15" Label="Source2" />
-            <Edge From="11" To="22" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>LiveView</Name>
-        <Description>Streams the recording over ZeroMQ for the machines window's live view (OpenRigs.Streaming), publishing on every interface: data on TCP 5556, video on 5558. Every message carries RigId, the machine's name, and the session key sub-&lt;SubjectId&gt;/ses-&lt;SessionId&gt;_date-&lt;start&gt;. Streams: video, the recorded frames after the video writer at 5 per second, 320 x 240 JPEG; elapsed, the seconds of video recorded so far (frames / trigger frequency), once a second; wheel, the raw encoder count from AnalogData, 10 times a second. A viewer only listens, and a slow or late one loses its own messages without slowing the rig; with none connected the messages are dropped. A port already in use (another workflow streaming) stops the workflow at Start with NetMQ's AddressAlreadyInUseException, before the camera is triggered.</Description>
+        <Description>Streams the recording over ZeroMQ for the machines window's live view (OpenRigs.Streaming), publishing on every interface: data on TCP 5556, video on 5558. Every message carries RigId, the machine's name, and the session key sub-&lt;SubjectId&gt;/ses-&lt;SessionId&gt;_date-&lt;start&gt;, the session folder's own name (StreamController, inline, takes it from PathPrefix). Streams: video, the recorded frames after the video writer at 5 per second, 320 x 240 JPEG; elapsed, the seconds of video recorded so far (frames / trigger frequency), once a second; wheel, the raw encoder count from AnalogData, 10 times a second. A viewer only listens, and a slow or late one loses its own messages without slowing the rig; with none connected the messages are dropped. A port already in use (another workflow streaming) stops the workflow at Start with NetMQ's AddressAlreadyInUseException, before the camera is triggered.</Description>
         <Workflow>
           <Nodes>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>RunSettings</Name>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="io:GetEnvironmentVariable">
-                <io:Name>COMPUTERNAME</io:Name>
-              </Combinator>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Zip" />
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="SubjectId" Selector="Item1.Item1" />
-                <Property Name="SessionId" Selector="Item1.Item2" />
-                <Property Name="RigId" Selector="Item2" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Streaming:StreamController.bonsai">
-              <RigId>UNMAPPED</RigId>
-              <SubjectId>UNMAPPED</SubjectId>
-              <SessionId>UNMAPPED</SessionId>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>StreamController</Name>
+              <Description>OpenRigs.Streaming's StreamController (open-rigs 77094a4), inline so that the session key comes from the session folder LogController made (PathPrefix, through SessionKey) rather than from a date of its own taken at Start, which named a folder a second earlier than the real one. StreamIdentity is RigId, the machine's name (COMPUTERNAME), and the key; it is published once PathPrefix exists, about 1 s after Start, and the streams' messages wait for it. The two publishers bind their ports at Start, as in the include. Swap back to the include once StreamController takes the session path.</Description>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>PathPrefix</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="ext:SessionKey" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="io:GetEnvironmentVariable">
+                      <io:Name>COMPUTERNAME</io:Name>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Zip" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Take">
+                      <rx:Count>1</rx:Count>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="rx:AsyncSubject">
+                    <Name>StreamIdentity</Name>
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject" TypeArguments="netmq:NetMQMessage">
+                    <rx:Name>DataMessage</rx:Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:ObserveOn">
+                      <rx:Scheduler>NewThreadScheduler</rx:Scheduler>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="zmq:Publisher">
+                      <zmq:ConnectionString>@tcp://0.0.0.0:5556</zmq:ConnectionString>
+                      <zmq:Topic />
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject" TypeArguments="netmq:NetMQMessage">
+                    <rx:Name>VideoMessage</rx:Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:ObserveOn">
+                      <rx:Scheduler>NewThreadScheduler</rx:Scheduler>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="zmq:Publisher">
+                      <zmq:ConnectionString>@tcp://0.0.0.0:5558</zmq:ConnectionString>
+                      <zmq:Topic />
+                    </Combinator>
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="1" To="3" Label="Source2" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="10" To="11" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>RecordedFrames</Name>
@@ -788,22 +944,18 @@
             </Expression>
           </Nodes>
           <Edges>
-            <Edge From="0" To="2" Label="Source1" />
-            <Edge From="1" To="2" Label="Source2" />
-            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
+            <Edge From="4" To="5" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
-            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="6" To="8" Label="Source1" />
+            <Edge From="7" To="8" Label="Source2" />
             <Edge From="8" To="9" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
-            <Edge From="10" To="12" Label="Source1" />
-            <Edge From="11" To="12" Label="Source2" />
+            <Edge From="11" To="12" Label="Source1" />
             <Edge From="12" To="13" Label="Source1" />
             <Edge From="13" To="14" Label="Source1" />
-            <Edge From="15" To="16" Label="Source1" />
-            <Edge From="16" To="17" Label="Source1" />
-            <Edge From="17" To="18" Label="Source1" />
-            <Edge From="18" To="19" Label="Source1" />
+            <Edge From="14" To="15" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>

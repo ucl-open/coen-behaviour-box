@@ -85,6 +85,17 @@ Write-Output "Creating a Bonsai environment and installing packages..."
 &.\.bonsai\Setup.cmd
 Assert-Success "Installing Bonsai and its packages"
 
+# The editor's window layout is per machine (gitignored). A machine without one gets
+# config\main.layout: the 5 Hz camera preview (Logging > RecordVideo > SampleInterval) opens at Start.
+$layout = ".\.bonsai\Settings\src\main.layout"
+if (Test-Path -Path $layout) {
+    Write-Output "Keeping the existing $layout (delete it and re-run deploy for config\main.layout, the camera preview)."
+} else {
+    New-Item -ItemType Directory -Path (Split-Path -Parent $layout) -Force | Out-Null
+    Copy-Item ".\config\main.layout" $layout
+    Write-Output "Created $layout from config\main.layout (camera preview opens at Start)."
+}
+
 # The video is encoded by ffmpeg.exe, which Bonsai.FFmpeg starts from PATH, on Intel Quick Sync
 # (h264_qsv). Without it, recording stops as soon as the first video file opens.
 $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue

@@ -1,6 +1,6 @@
 param(
     # Internal: the step this script runs in a fresh process of its own (assemblies stay loaded).
-    [ValidateSet('', 'Build', 'RigDevice')][string]$Step = ''
+    [ValidateSet('', 'Build', 'RigDevice', 'Checks')][string]$Step = ''
 )
 # Checks a change to src\ without the rig and without opening Bonsai: no window, no device.
 #   1. Compiles src\Extensions under C# 5, the language Bonsai compiles it with.
@@ -8,7 +8,10 @@ param(
 #      before it subscribes anything: every type, selector, include, subject and mapping.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
 #      and a missing entry or a name breaking the naming rules stops it.
-# Needs a deployed clone (scripts\deploy.cmd: .bonsai\Packages). Exit 0 when all three pass.
+#   4. ExposureFitsTrigger's limit (19,000 us passes at 50 Hz, 19,001 and 30,000 stop),
+#      SessionKey on a session folder's path, Watchdog's own message, and CameraOverrides'
+#      refusal without a "Parameter name" line; in main.bonsai, every timeout is a Watchdog with a message.
+# Needs a deployed clone (scripts\deploy.cmd: .bonsai\Packages). Exit 0 when all four pass.
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $bin = Join-Path ([IO.Path]::GetTempPath()) 'coen-behaviour-box-check'
@@ -114,6 +117,64 @@ if ($Step -eq 'RigDevice') {
     exit $(if ($failed) { 1 } else { 0 })
 }
 
+if ($Step -eq 'Checks') {
+    Initialize-Assemblies
+    $failed = 0
+    function Get-Refusal([scriptblock]$Run) {
+        try { & $Run; return $null } catch { $x = $_.Exception; while ($x.InnerException) { $x = $x.InnerException }; return $x }
+    }
+    # Exposure at 50 Hz with the workflow's 1000 us margin: 19,000 ran at the full rate on GEEK-BBOX1
+    # (30 Oct 2026); 30,000 ran at 25 fps with every frame mistimed.
+    foreach ($c in @(@(19000, $true), @(10000, $true), @(19001, $false), @(30000, $false))) {
+        $x = Get-Refusal { [UclOpenCoenBehaviourBox.ExposureFitsTrigger]::Check('Camera-Box', $c[0], 50, 1000) }
+        if ($c[1] -and $x) { "  FAIL  ExposureTime $($c[0]) refused: $($x.Message)"; $failed++ }
+        elseif (-not $c[1] -and -not $x) { "  FAIL  ExposureTime $($c[0]) accepted at 50 Hz"; $failed++ }
+        elseif (-not $c[1] -and -not $x.Message.Contains('to 19000 or less')) { "  FAIL  ExposureTime $($c[0]): $($x.Message)"; $failed++ }
+        elseif ($c[1]) { "  ok    ExposureTime $($c[0]) fits 50 Hz" }
+        else { "  ok    ExposureTime $($c[0]) refused: $($x.Message)" }
+    }
+    $key = [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\sub-M1\ses-01_date-2026-10-30T17-46-16')
+    if ($key -eq 'sub-M1/ses-01_date-2026-10-30T17-46-16') { "  ok    SessionKey $key" } else { "  FAIL  SessionKey gave '$key'"; $failed++ }
+    $x = Get-Refusal { [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\not-a-session') }
+    if ($x -and $x.Message.Contains('does not end in sub-')) { "  ok    SessionKey refused a path that is not a session folder" } else { "  FAIL  SessionKey accepted 'C:\Data\not-a-session'"; $failed++ }
+    $x = Get-Refusal { [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\sub-M1\ses-03/1_date-2026-10-30T17-46-16') }
+    if ($x -and $x.Message.Contains('in SubjectId or SessionId')) { "  ok    SessionKey refused a SessionId with a slash, naming the cause" } else { "  FAIL  SessionKey on a SessionId with a slash: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
+
+    # The Rx operators below run on worker threads: load everything now and drop the resolver,
+    # as the RigDevice step does, so no scriptblock is called from those threads.
+    foreach ($p in $script:resolveMap.Values) { if (Test-Path $p) { try { $null = [Reflection.Assembly]::LoadFrom($p) } catch {} } }
+    [AppDomain]::CurrentDomain.remove_AssemblyResolve($script:resolver)
+    $rx = [System.Reactive.Linq.Observable]
+    $wait = $rx.GetMethods() | Where-Object { $_.Name -eq 'Wait' -and $_.GetParameters().Count -eq 1 } | Select-Object -First 1
+    $return = $rx.GetMethods() | Where-Object { $_.Name -eq 'Return' -and $_.GetParameters().Count -eq 1 } | Select-Object -First 1
+    $never = $rx.GetMethods() | Where-Object { $_.Name -eq 'Never' -and $_.GetParameters().Count -eq 0 } | Select-Object -First 1
+    function Invoke-Process($Operator, [type]$Type, $Source) {
+        $out = $Operator.GetType().GetMethods() | Where-Object { $_.Name -eq 'Process' } | Select-Object -First 1
+        if ($out.IsGenericMethodDefinition) { $out = $out.MakeGenericMethod($Type) }
+        $wait.MakeGenericMethod($out.ReturnType.GetGenericArguments()[0]).Invoke($null, @(, $out.Invoke($Operator, @(, $Source))))
+    }
+    # Watchdog: silent past DueTime -> its own message; a value in time passes.
+    $dog = New-Object UclOpenCoenBehaviourBox.Watchdog
+    $dog.DueTime = [TimeSpan]::FromSeconds(0.2); $dog.Message = 'The board did not confirm its clock.'
+    $x = Get-Refusal { Invoke-Process $dog ([int]) ($never.MakeGenericMethod([int]).Invoke($null, @())) }
+    if ($x -is [TimeoutException] -and $x.Message -eq $dog.Message) { "  ok    Watchdog stopped with its own message" } else { "  FAIL  Watchdog on silence: $(if ($x) { $x.Message } else { 'no error' })"; $failed++ }
+    $x = Get-Refusal { $null = Invoke-Process $dog ([int]) ($return.MakeGenericMethod([int]).Invoke($null, @(, 1))) }
+    if (-not $x) { "  ok    Watchdog passed a value that came in time" } else { "  FAIL  Watchdog refused a value in time: $($x.Message)"; $failed++ }
+    # CameraOverrides: a refusal reads as one message, with no "Parameter name" line.
+    $over = New-Object UclOpenCoenBehaviourBox.CameraOverrides
+    $over.ExposureTime = -1
+    $camera = New-Object 'UclOpenCoenBehaviourBox.NamedDevice[UclOpenCoenBehaviourBox.SpinnakerCamera]' 'Camera-Box', (New-Object UclOpenCoenBehaviourBox.SpinnakerCamera)
+    $x = Get-Refusal { $null = Invoke-Process $over $null ($return.MakeGenericMethod($camera.GetType()).Invoke($null, @(, $camera.PSObject.BaseObject))) }
+    if ($x -and $x.Message.Contains('must be above 0') -and -not $x.Message.Contains('Parameter name')) { "  ok    CameraOverrides refused ExposureTime -1 in one message" } else { "  FAIL  CameraOverrides on ExposureTime -1: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
+    $text = [IO.File]::ReadAllText((Join-Path $repo 'src\main.bonsai'))
+    # Every timeout in the workflow says what did not arrive: Watchdog with a message, never a bare Timeout.
+    $dogs = [regex]::Matches($text, 'xsi:type="ext:Watchdog">\s*<ext:DueTime>[^<]+</ext:DueTime>\s*<ext:Message>[^<]+</ext:Message>').Count
+    $bare = [regex]::Matches($text, 'xsi:type="rx:Timeout"').Count
+    if ($bare -eq 0 -and $dogs -eq [regex]::Matches($text, 'xsi:type="ext:Watchdog"').Count) { "  ok    $dogs Watchdog(s), each with a message; no bare Timeout" }
+    else { "  FAIL  $bare bare rx:Timeout, or a Watchdog without a message"; $failed++ }
+    exit $(if ($failed) { 1 } else { 0 })
+}
+
 if (-not (Test-Path (Join-Path $bonsaiDir 'Packages'))) { throw "No .bonsai\Packages in $repo. Run scripts\deploy.cmd first." }
 $bad = 0
 "1. Compiling src\Extensions as C# 5..."
@@ -128,5 +189,8 @@ if ($LASTEXITCODE -ne 0) { "  FAILED"; $bad++ } else { "  ok" }
 "3. RigDevice on config\rig-template.yml..."
 & powershell -NoProfile -ExecutionPolicy Bypass -File $MyInvocation.MyCommand.Path -Step RigDevice
 if ($LASTEXITCODE -ne 0) { "  FAILED"; $bad++ }
-if ($bad) { "check-workflow: $bad of 3 steps failed."; exit 1 }
-"check-workflow: all 3 steps passed."
+"4. ExposureFitsTrigger, SessionKey, Watchdog and CameraOverrides..."
+& powershell -NoProfile -ExecutionPolicy Bypass -File $MyInvocation.MyCommand.Path -Step Checks
+if ($LASTEXITCODE -ne 0) { "  FAILED"; $bad++ }
+if ($bad) { "check-workflow: $bad of 4 steps failed."; exit 1 }
+"check-workflow: all 4 steps passed."
