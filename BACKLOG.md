@@ -54,7 +54,8 @@ Found while building this workflow on 28 Oct 2026. Open each with the line `*Com
   - (3) The streamed frames show the lit box, walls and wheel clear, at 12 s and at 25 min alike; 320 x 240, mean 9.4 KB.
   - (4) `elapsed`'s last value was 1800.0, one second after 1799.26.
   - Also: Stop and Start 0.7 s later in the same editor recorded a second clean session (3000 == 3000, all checks as above), the ports rebound, and the listener got the new key with indices from 0; closing the editor then exited with no question (IDs given on the command line).
-  - Still open: a listener on another machine (PIPOFFICERIG; firewall rule "Live view ports open to the lab network" present on GEEK-BBOX1), and the wheel's values (nobody turned it: 0 throughout).
+  - A listener on another machine on the lab network: Pip viewed GEEK-BBOX1's stream from another computer during a 10-minute run (`ses-remote-view`, 30 Oct 2026 night): "It worked!" The firewall rule "Live view ports open to the lab network" (local subnet) is on GEEK-BBOX1.
+  - Still open: the wheel's values (nobody turned it: 0 throughout).
 
 ## Later
 
