@@ -86,7 +86,7 @@ Write-Output "Creating a Bonsai environment and installing packages..."
 Assert-Success "Installing Bonsai and its packages"
 
 # The video is encoded by ffmpeg.exe, which Bonsai.FFmpeg starts from PATH, on Intel Quick Sync
-# (h264_qsv). Without it, recording stops as soon as Start recording is pressed.
+# (h264_qsv). Without it, recording stops as soon as the first video file opens.
 $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
 if (-not $ffmpeg) {
     Write-Warning "FFmpeg was not found on PATH. Install it with: winget install --id Gyan.FFmpeg -e, then open a new window."

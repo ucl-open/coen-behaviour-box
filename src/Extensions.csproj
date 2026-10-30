@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <!-- Bonsai compiles src\Extensions itself with the .NET Framework's csc, which is C# 5, so a
+         build here must refuse what Bonsai would (4b4cb4d: $"..." passed here, failed on the rig). -->
+    <LangVersion>5</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

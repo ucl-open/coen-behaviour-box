@@ -174,7 +174,7 @@
           <Nodes>
             <Expression xsi:type="GroupWorkflow">
               <Name>BehaviorBoard</Name>
-              <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel's encoder on port 2 (inline, in Position mode, logged raw). Triggers start 5 s after Start recording, so the camera is armed first.</Description>
+              <Description>Harp Behavior board and the camera trigger on Trigger0 from OpenRigs.Devices, and the running wheel's encoder on port 2 (inline, in Position mode, logged raw). Triggers start 5 s after RunSettings (at Start), so the camera is armed first.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -293,7 +293,7 @@
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>Camera</Name>
-              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Nothing subscribes until Start recording is pressed; the Timeout then stops the workflow with &quot;The operation has timed out.&quot; if no frame arrives for 15 s (usually the trigger cable).</Description>
+              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Nothing subscribes until RunSettings is published at Start; the Timeout then stops the workflow with &quot;The operation has timed out.&quot; if no frame arrives for 15 s (usually the trigger cable).</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -476,7 +476,7 @@
                           <Selector>Key</Selector>
                         </Expression>
                         <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:FormatFileName.bonsai">
-                          <Name />
+                          <Name>UNMAPPED</Name>
                           <Extension>avi</Extension>
                         </Expression>
                         <Expression xsi:type="PropertyMapping">
@@ -540,7 +540,7 @@
                           <Selector>Key</Selector>
                         </Expression>
                         <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:FormatFileName.bonsai">
-                          <Name />
+                          <Name>UNMAPPED</Name>
                           <Extension>csv</Extension>
                         </Expression>
                         <Expression xsi:type="PropertyMapping">
@@ -649,7 +649,7 @@
               <Combinator xsi:type="rx:SubscribeWhen" />
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:LogHarpDevice.bonsai">
-              <LogName />
+              <LogName>UNMAPPED</LogName>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>PathPrefix</Name>

@@ -37,7 +37,9 @@ The board is found by its port and the camera by its serial number, never by the
 
 Open `src\main.bonsai` in `.bonsai\Bonsai.exe`, click an empty part of the workspace, and in the Properties panel set `SubjectId`, `SessionId` and `RunLengthMins` (whole minutes, default 30). Or set them from the command line: `.bonsai\Bonsai.exe src\main.bonsai --start --property:SubjectId=<id> --property:SessionId=<id> --property:RunLengthMins=30`. Press Start: the values are read once; if either ID is empty or the run length is not 1 to 9999, the workflow stops at once with "Sequence contains no elements." and nothing is recorded. Otherwise the board connects, the camera arms, triggers start 5 s later, and after the run length the last video and CSV close. Wait for `ffmpeg.exe` to exit before closing Bonsai, or the end of the video is lost. Never save the workflow: per-session values are set at each run and per-rig values live in `rig.yml`.
 
-Each device's name is typed once in the workflow, as the `Name` of its `RigDevice` node in `RigConfig`. That node publishes the device's `Name` and `Settings` (its `rig.yml` entry) into a subject labelled with the name, and the device's file and log names are mapped from that subject's `Name`, so the entry read and the files written cannot disagree. The subject labels repeat the name, but a misspelt label stops Bonsai's build ("The specified variable ... was not found"), and a label that differs from the name changes nothing in the data. A second camera is another entry under `camera:`, another `RigDevice` (`Camera-Face`) and subject, and a copy of the camera's `Hardware` and `RecordVideo` parts subscribing to it.
+Each device's name is typed once in the workflow, as the `Name` of its `RigDevice` node in `RigConfig`. That node publishes the device's `Name` and `Settings` (its `rig.yml` entry) into a subject labelled with the name, and the device's file and log names are mapped from that subject's `Name`, so the entry read and the files written cannot disagree. Each half of the name starts with a capital and holds only letters and digits (`Camera-Box`, never `Camera-box` or `Camera-Box_2`: the logging spec reads a device's name up to the first underscore); `RigDevice` stops the workflow at Start on any other. The subject labels repeat the name, but a misspelt label stops Bonsai's build ("The specified variable ... was not found"), and a label that differs from the name changes nothing in the data. The file and log names' own value is `UNMAPPED`, so a deleted mapping shows in the file names rather than writing `_<DateTime>` files.
+
+A second camera, `Camera-Face` on the board's second trigger, takes these, each by hand: a `face:` entry under `camera:` in every rig's `rig.yml`; in `RigConfig`, another `RigDevice` and `AsyncSubject` named `Camera-Face` off the `Camera` selector; in `Hardware`, a copy of the `Camera` group subscribing to `Camera-Face`, parsing `TimestampedCamera1Frame` and publishing `FrameEvents-Face`; in `Logging`, a copy of `RecordVideo` subscribing to `FrameEvents-Face`, with its three `Camera-Box` subscriptions in `CameraChunk` changed to `Camera-Face` and `Trigger0Frequency` changed to `Trigger1Frequency` in `RunLengthToFrames` and the video's `FrameRate`. A copy that misses one of the `Camera-Box` subscriptions records under the wrong name, and nothing catches it. Also open-rigs#4: `CameraTriggerController`'s `StartCameras` does not start the second output and its Camera1 subject parses the Camera0 register, so the second camera gets no triggers until that is fixed.
 
 The workflow's top level follows the open-rigs layout: `RigConfig` (reads `rig.yml` and takes out `BehaviorBoard-Main` and `Camera-Box`), `Initialization` (the run settings), `Hardware` (board and camera, each configured from its entry in `rig.yml`) and `Logging` (session folder, video, board log).
 
@@ -50,7 +52,15 @@ Each session writes to `<rootPath>\sub-<subject>\ses-<session>_date-<date>\`, on
 
 Sessions before 30 Oct 2026 have `Cameras\VideoData_Camera1.avi` and `.csv`, one file per run, and `BehaviorBoard\BehaviorBoard_*`.
 
-If no frame arrives within 15 s of Start recording, the workflow stops with "The operation has timed out." (usually the trigger cable).
+If no frame arrives within 15 s of Start, the workflow stops with "The operation has timed out." (usually the trigger cable).
+
+## Checking a change without the rig
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\check-workflow.ps1
+```
+
+On a deployed clone, with no Bonsai window and no hardware: compiles `src\Extensions` as C# 5 (Bonsai compiles it with the .NET Framework's compiler, so `$"..."` and other C# 6 features fail there; `Extensions.csproj` sets `LangVersion` 5 for the same reason), builds `src\main.bonsai` with Bonsai's own builders (every type, selector, include, subject and mapping), and runs `RigDevice` on `config\rig-template.yml`, both for the names the workflow asks for and for names it must refuse. Exit 0 when all pass. It cannot check the camera, the board or the hour hand-over: those need the rig (`BACKLOG.md`, "Check on the rig").
 
 ## OpenRigs packages
 

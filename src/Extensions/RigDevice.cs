@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text.RegularExpressions;
 using Bonsai;
 
 namespace UclOpenCoenBehaviourBox
@@ -36,10 +37,14 @@ namespace UclOpenCoenBehaviourBox
         /// <summary>The entry named by Name, or an exception that says what rig.yml has instead.</summary>
         public static TDevice Find<TDevice>(IDictionary<string, TDevice> entries, string name)
         {
+            // Each part PascalCase, letters and digits only: the name is the device's folder and
+            // file names, and the logging spec reads a device's name up to the first underscore.
             var parts = (name ?? string.Empty).Split('-');
-            if (parts.Length != 2 || parts[0].Length == 0 || parts[1].Length == 0)
+            if (parts.Length != 2 || !NamePart.IsMatch(parts[0]) || !NamePart.IsMatch(parts[1]))
             {
-                throw new ArgumentException(string.Format("RigDevice's Name is '{0}'; it must be Kind-Instance, such as Camera-Box.", name));
+                throw new ArgumentException(string.Format(
+                    "RigDevice's Name is '{0}'; it must be Kind-Instance, each part starting with a capital and " +
+                    "holding only letters and digits, such as Camera-Box.", name));
             }
 
             var kind = LowerFirst(parts[0]);
@@ -59,6 +64,8 @@ namespace UclOpenCoenBehaviourBox
                 "Add {1} under {0}: in this rig's rig.yml, or correct the name there.",
                 kind, entry, name, has));
         }
+
+        static readonly Regex NamePart = new Regex("^[A-Z][A-Za-z0-9]*$");
 
         static string LowerFirst(string text)
         {
