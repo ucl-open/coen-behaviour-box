@@ -798,7 +798,7 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="clm:WriteSessionManifest">
                 <clm:IngestScript>coen-behaviour-box</clm:IngestScript>
-                <clm:RigConfigPath>C:\Coen-Lab-Local\RigConfigs\%COMPUTERNAME%ig.yml</clm:RigConfigPath>
+                <clm:RigConfigPath>C:\Coen-Lab-Local\RigConfigs\%COMPUTERNAME%\rig.yml</clm:RigConfigPath>
               </Combinator>
             </Expression>
           </Nodes>
