@@ -85,4 +85,4 @@ On a deployed clone, with no Bonsai window and no hardware, in four steps: compi
 
 ## OpenRigs packages
 
-The `OpenRigs.*` Bonsai packages are built locally into `local_packages\` until open-rigs publishes a release. `patches\README.md` records the base commit, the two camera fixes applied on top, and the package hashes.
+Every package in `local_packages\` comes from [coen-openrigs-custom](https://github.com/ucl-open/coen-openrigs-custom), which holds one version of each for all the lab's workflows: the lab's own (`OpenRigs.Control`, `OpenRigs.LiveView`) and patched builds of open-rigs' `OpenRigs.*` packages and of `Bonsai.FFmpeg`, until upstream releases the fixes (its `patches\README.md` has base commits, patches and hashes). Its `scripts\update-workflows.ps1` replaces the copies here when a package there changes, runs `scripts\check-workflow.ps1`, and commits and pushes only if the check passes. Do not change a package here by hand: change it there.
