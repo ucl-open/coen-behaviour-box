@@ -148,26 +148,33 @@ namespace CoenLab.SessionManifest
 
         public string ManifestPath { get { return manifestPath; } }
 
-        /// <summary>The first write, status partial and run.outcome running. Throws if the folder does not exist or the file cannot be written: nothing recorded is the thing to stop for.</summary>
+        /// <summary>The first write, status partial and run.outcome running. Makes the folder if the loggers have not yet: PathPrefix names it before any of them writes (seen on GEEK-BBOX1, 31 Oct 2026, where every Go stopped here), and they make the same folder. Throws if the file cannot be written: nothing recorded is the thing to stop for.</summary>
         public string Begin(string sessionFolder)
         {
             if (string.IsNullOrEmpty(sessionFolder)) throw new ArgumentException("WriteSessionManifest was given no session folder.");
-            folder = Path.GetFullPath(sessionFolder.TrimEnd('\\', '/'));
-            if (!Directory.Exists(folder))
-            {
-                throw new DirectoryNotFoundException(string.Format(
-                    "WriteSessionManifest: the session folder '{0}' does not exist, so no manifest can be written there.", folder));
-            }
-            manifestPath = Path.Combine(folder, FileName);
+            var full = Path.GetFullPath(sessionFolder.TrimEnd('\\', '/'));
+            Directory.CreateDirectory(full);
+            var path = Path.Combine(full, FileName);
+            folder = full;
             started = DateTime.UtcNow;
-            Write("running", null, 0, started, null);
+            try
+            {
+                manifestPath = path;
+                Write("running", null, 0, started, null);
+            }
+            catch
+            {
+                folder = null;
+                manifestPath = null;
+                throw;
+            }
             return manifestPath;
         }
 
-        /// <summary>The second write, with the outcome. Called once; a Begin that never happened writes nothing.</summary>
+        /// <summary>The second write, with the outcome. Called once; a Begin that never happened, or failed, writes nothing.</summary>
         public void Finish(string outcome, string error, long items)
         {
-            if (folder == null) return;
+            if (manifestPath == null) return;
             var ended = DateTime.UtcNow;
             Write(outcome, error, items, started, ended);
         }

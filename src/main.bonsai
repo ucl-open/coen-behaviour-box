@@ -144,6 +144,9 @@
                   <Name>RunLengthMins</Name>
                   <Value>30</Value>
                   <Description>How long to record, in whole minutes (1 to 9999).</Description>
+                  <Minimum>1</Minimum>
+                  <Maximum>9999</Maximum>
+                  <WholeNumber>true</WholeNumber>
                 </Parameter>
               </Parameters>
               <Commands />
