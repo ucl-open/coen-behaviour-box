@@ -12,6 +12,7 @@ behaviorBoard:
     cameraTriggerController:
       trigger0Frequency: 50
       trigger1Frequency: 50
+    liveView: null
     portName: COM-CHANGE-ME
     pulseController: null
     runningWheel:
@@ -23,6 +24,7 @@ camera:
     discriminatorType: SpinnakerCamera
     exposureTime: 10000.0
     gain: 5.0
+    liveView: null
     serialNumber: CHANGE-ME
     triggerFrequency: 50.0
 rootPath: C:\Data\CHANGE-ME

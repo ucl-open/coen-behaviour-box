@@ -27,6 +27,8 @@ namespace UclOpenCoenBehaviourBox
     
         private RunningWheel _runningWheel;
     
+        private LiveView _liveView;
+    
         public BehaviorBoard()
         {
         }
@@ -37,6 +39,7 @@ namespace UclOpenCoenBehaviourBox
             _pulseController = other._pulseController;
             _cameraTriggerController = other._cameraTriggerController;
             _runningWheel = other._runningWheel;
+            _liveView = other._liveView;
         }
     
         /// <summary>
@@ -114,6 +117,25 @@ namespace UclOpenCoenBehaviourBox
             }
         }
     
+        /// <summary>
+        /// Live view settings for this board (OpenRigs.LiveView).
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("liveView")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="liveView")]
+        [System.ComponentModel.DescriptionAttribute("Live view settings for this board (OpenRigs.LiveView).")]
+        public LiveView LiveView
+        {
+            get
+            {
+                return _liveView;
+            }
+            set
+            {
+                _liveView = value;
+            }
+        }
+    
         public System.IObservable<BehaviorBoard> Generate()
         {
             return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new BehaviorBoard(this)));
@@ -129,7 +151,8 @@ namespace UclOpenCoenBehaviourBox
             stringBuilder.Append("PortName = " + _portName + ", ");
             stringBuilder.Append("PulseController = " + _pulseController + ", ");
             stringBuilder.Append("CameraTriggerController = " + _cameraTriggerController + ", ");
-            stringBuilder.Append("RunningWheel = " + _runningWheel);
+            stringBuilder.Append("RunningWheel = " + _runningWheel + ", ");
+            stringBuilder.Append("LiveView = " + _liveView);
             return true;
         }
     
@@ -577,6 +600,144 @@ namespace UclOpenCoenBehaviourBox
 
 
     /// <summary>
+    /// How OpenRigs.LiveView's StreamDevices streams this device; each setting left out keeps its default for the device's kind.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("How OpenRigs.LiveView\'s StreamDevices streams this device; each setting left out " +
+        "keeps its default for the device\'s kind.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class LiveView
+    {
+    
+        private bool _enabled;
+    
+        private double? _rate;
+    
+        private int? _width;
+    
+        private int? _height;
+    
+        public LiveView()
+        {
+            _enabled = true;
+        }
+    
+        protected LiveView(LiveView other)
+        {
+            _enabled = other._enabled;
+            _rate = other._rate;
+            _width = other._width;
+            _height = other._height;
+        }
+    
+        /// <summary>
+        /// False: the device is not streamed at all.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("enabled")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="enabled")]
+        [System.ComponentModel.DescriptionAttribute("False: the device is not streamed at all.")]
+        public bool Enabled
+        {
+            get
+            {
+                return _enabled;
+            }
+            set
+            {
+                _enabled = value;
+            }
+        }
+    
+        /// <summary>
+        /// Messages per second (camera default 5, behavior board 10).
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("rate")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="rate")]
+        [System.ComponentModel.DescriptionAttribute("Messages per second (camera default 5, behavior board 10).")]
+        public double? Rate
+        {
+            get
+            {
+                return _rate;
+            }
+            set
+            {
+                _rate = value;
+            }
+        }
+    
+        /// <summary>
+        /// Width of the streamed frames, in pixels; video only (default 320).
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("width")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="width")]
+        [System.ComponentModel.DescriptionAttribute("Width of the streamed frames, in pixels; video only (default 320).")]
+        public int? Width
+        {
+            get
+            {
+                return _width;
+            }
+            set
+            {
+                _width = value;
+            }
+        }
+    
+        /// <summary>
+        /// Height of the streamed frames, in pixels; video only (default 240).
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("height")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="height")]
+        [System.ComponentModel.DescriptionAttribute("Height of the streamed frames, in pixels; video only (default 240).")]
+        public int? Height
+        {
+            get
+            {
+                return _height;
+            }
+            set
+            {
+                _height = value;
+            }
+        }
+    
+        public System.IObservable<LiveView> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new LiveView(this)));
+        }
+    
+        public System.IObservable<LiveView> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new LiveView(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("Enabled = " + _enabled + ", ");
+            stringBuilder.Append("Rate = " + _rate + ", ");
+            stringBuilder.Append("Width = " + _width + ", ");
+            stringBuilder.Append("Height = " + _height);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    /// <summary>
     /// Represents the PulseController module on the BehaviorBoard.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
@@ -953,6 +1114,8 @@ namespace UclOpenCoenBehaviourBox
     
         private string _discriminatorType;
     
+        private LiveView _liveView;
+    
         public SpinnakerCamera()
         {
             _triggerFrequency = 50D;
@@ -971,6 +1134,7 @@ namespace UclOpenCoenBehaviourBox
             _gain = other._gain;
             _binning = other._binning;
             _discriminatorType = other._discriminatorType;
+            _liveView = other._liveView;
         }
     
         /// <summary>
@@ -1077,6 +1241,25 @@ namespace UclOpenCoenBehaviourBox
             }
         }
     
+        /// <summary>
+        /// Live view settings for this camera (OpenRigs.LiveView).
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("liveView")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="liveView")]
+        [System.ComponentModel.DescriptionAttribute("Live view settings for this camera (OpenRigs.LiveView).")]
+        public LiveView LiveView
+        {
+            get
+            {
+                return _liveView;
+            }
+            set
+            {
+                _liveView = value;
+            }
+        }
+    
         public System.IObservable<SpinnakerCamera> Generate()
         {
             return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new SpinnakerCamera(this)));
@@ -1094,7 +1277,8 @@ namespace UclOpenCoenBehaviourBox
             stringBuilder.Append("SerialNumber = " + _serialNumber + ", ");
             stringBuilder.Append("Gain = " + _gain + ", ");
             stringBuilder.Append("Binning = " + _binning + ", ");
-            stringBuilder.Append("DiscriminatorType = " + _discriminatorType);
+            stringBuilder.Append("DiscriminatorType = " + _discriminatorType + ", ");
+            stringBuilder.Append("LiveView = " + _liveView);
             return true;
         }
     
@@ -1837,6 +2021,11 @@ namespace UclOpenCoenBehaviourBox
             return Process<FixedPulse>(source);
         }
 
+        public System.IObservable<string> Process(System.IObservable<LiveView> source)
+        {
+            return Process<LiveView>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<PulseController> source)
         {
             return Process<PulseController>(source);
@@ -1906,6 +2095,7 @@ namespace UclOpenCoenBehaviourBox
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CameraTriggerController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<ExperimentSession>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<FixedPulse>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<LiveView>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutput>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutputs>))]
@@ -2102,6 +2292,11 @@ namespace UclOpenCoenBehaviourBox
             return Process<FixedPulse>(source);
         }
 
+        public System.IObservable<string> Process(System.IObservable<LiveView> source)
+        {
+            return Process<LiveView>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<PulseController> source)
         {
             return Process<PulseController>(source);
@@ -2171,6 +2366,7 @@ namespace UclOpenCoenBehaviourBox
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CameraTriggerController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<ExperimentSession>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<FixedPulse>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<LiveView>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutput>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutputs>))]

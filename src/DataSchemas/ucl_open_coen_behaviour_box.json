@@ -49,6 +49,19 @@
           "default": null,
           "description": "Optional RunningWheelModule module to define wheel geometry.",
           "title": "RunningWheel"
+        },
+        "liveView": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LiveView"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Live view settings for this board (OpenRigs.LiveView).",
+          "title": "LiveView"
         }
       },
       "required": [
@@ -207,6 +220,64 @@
       "title": "FixedPulse",
       "type": "object"
     },
+    "LiveView": {
+      "description": "How OpenRigs.LiveView's StreamDevices streams this device; each setting left out keeps its default for the device's kind.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "False: the device is not streamed at all.",
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "rate": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1000,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Messages per second (camera default 5, behavior board 10).",
+          "title": "Rate"
+        },
+        "width": {
+          "anyOf": [
+            {
+              "maximum": 4096,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Width of the streamed frames, in pixels; video only (default 320).",
+          "title": "Width"
+        },
+        "height": {
+          "anyOf": [
+            {
+              "maximum": 4096,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Height of the streamed frames, in pixels; video only (default 240).",
+          "title": "Height"
+        }
+      },
+      "title": "LiveView",
+      "type": "object"
+    },
     "PulseController": {
       "description": "Represents the PulseController module on the BehaviorBoard.",
       "properties": {
@@ -339,6 +410,19 @@
           "default": "SpinnakerCamera",
           "title": "DiscriminatorType",
           "type": "string"
+        },
+        "liveView": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LiveView"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Live view settings for this camera (OpenRigs.LiveView).",
+          "title": "LiveView"
         }
       },
       "title": "SpinnakerCamera",

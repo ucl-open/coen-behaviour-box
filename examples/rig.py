@@ -1,10 +1,11 @@
 from pathlib import Path
 
 from open_rigs.core import yaml
-from open_rigs.devices.behavior_board import BehaviorBoard, CameraTriggerController, RunningWheel
-from open_rigs.video import SpinnakerCamera
+from open_rigs.devices.behavior_board import CameraTriggerController, RunningWheel
 
 from ucl_open_coen_behaviour_box.rig import (
+    BehaviorBoard,
+    SpinnakerCamera,
     UclOpenCoenBehaviourBoxRig
 )
 
