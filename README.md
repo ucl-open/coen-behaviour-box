@@ -58,6 +58,10 @@ A camera preview window opens at Start, showing 5 frames a second. It is `Loggin
 
 If no frame arrives for 15 s, the workflow stops with "No frame from the camera for 15 s ..." (usually the trigger cable).
 
+## Session manifest
+
+Every session folder gets a `manifest.json` (`Logging` > `WriteSessionManifest`, from [Coen-Lab/session-manifest](https://github.com/Coen-Lab/session-manifest); `src\Extensions\SessionManifest.cs` is a copy of that repo's file). It is written when the session folder exists and again when the run ends: the machine and `rig.yml` verbatim, the subject and session from the folder name, this repo's commit and whether the clone was dirty, how the run ended (`completed` when the run length's frames were written, `error` with a Watchdog's message, `stopped` when Bonsai was stopped first) and every file in the folder with its size. Its `status` is `partial`: the overnight copy (rig-setup's `rig-sync.ps1`) checks every listed file is present and closed, adds sizes and hashes, writes `complete`, and only then copies the session to the server, the manifest last. A listed file that is missing stops that session's copy and raises an alarm on the rig's health report. `ingest_script` is `coen-behaviour-box`, the name the server's ingest registry runs for this data. Errors on the board's logging chain do not reach the node, so a session whose board log failed reads `stopped`, not `error`.
+
 ## Live view
 
 While it runs, the workflow streams over ZeroMQ with `OpenRigs.Streaming`, for rig-setup's machines window: data on TCP 5556, video on 5558, bound on every interface (rig-setup's `firewall:live-view` opens both to the local subnet). Each message is a topic `<MACHINE-NAME>/<stream>/`, a JSON header (`rigId`, `sessionKey` `sub-<subject>/ses-<session>_date-<start>`, `stream`, `index`, `enc`, `type`) and the payload. The session key is the session folder's own name, taken from the folder once it exists, about a second after Start (`LiveView` > `StreamController`, an inline copy of the include for that reason). Streams:
