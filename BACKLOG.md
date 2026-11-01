@@ -90,6 +90,15 @@ On GEEK-BBOX1, test config, harness talking to the control port directly (not ri
 
 - **Back up `rig.yml` to the share.** Decided 28 Oct 2026: `C:\RigConfigs\<MACHINE>\rig.yml` on the rig is the master and is edited there; rig-setup copies it one way up to `K:\config\<MACHINE>\` with a last-synced time, as it does `Health.json`. The workflow reads only the local file, so a rig runs while the server is down. Not server-to-rig, because `config/` on the share is writable by rigs only (`2750 svc-rig:lab-tonic`), and not a two-way mirror. Copy to a temporary name and rename, and never touch the local file from the sync. Also: set up the clone (`deploy.cmd`) when rig-setup first clones it, and give `rig-behaviour-box` the .NET SDK, which deploy's regeneration needs (Pip's choice over skipping regeneration on rigs, to stay identical to the open-rigs template). The full plan is in Coen-Lab/rig-setup `BACKLOG.md`, "Behaviour box on `ucl-open/coen-behaviour-box`".
 
+## Audit 1 Nov 2026 (session manifest v2, OpenRigs.Manifest): not changed
+
+Raised by the independent audit of the session manifest (round 1 of 5) and kept as they are; do not raise again without new information. Fixed in the same round: a run that finished and was then stopped by rig-control read `stopped` without a run input (OpenRigs.Control 0.1.0-local.6 keeps `FinishedAt`), `rig.os` said Windows 6.2, a repeated `--property` made a manifest PowerShell 5.1 cannot read, the rename left a moment with no manifest, wildcard ExpectedFiles, a note when `--property:ConfigRoot` is not where rig.yml was read, and rig-sync's missing alarm now says how to release the session.
+
+- Without SessionControl, an error elsewhere in the workflow is recorded as `stopped` with `error: null`: the node cannot see it, and the manifest's notes say so. Connect a run input (as this workflow does) where the cause matters.
+- A saved workflow writes SessionManifest's settings twice, on the group and on its inner `SessionManifestSettings`: the group's are what hand-written XML (this repo's) uses, the inner node is what survives Bonsai's copies. Tested: load, the editor's copy, save and reload keep one settings node.
+- A missing `PathPrefix` stops the workflow at build rather than running without a manifest: a session with no record is the thing to stop for.
+- `expected.found` is counted at the node's writes and not refreshed by rig-sync, which checks presence itself.
+
 ## Audit 28 Oct 2026: not changed
 
 Raised by the independent audit and kept as they are; do not raise again without new information.
