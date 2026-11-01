@@ -60,7 +60,15 @@ If no frame arrives for 15 s, the workflow stops with "No frame from the camera 
 
 ## Session manifest
 
-Every session folder gets a `manifest.json` (`Logging` > `WriteSessionManifest`, from [Coen-Lab/session-manifest](https://github.com/Coen-Lab/session-manifest); `src\Extensions\SessionManifest.cs` is a copy of that repo's file). It is written when the session folder exists and again when the run ends: the machine and `rig.yml` verbatim, the subject and session from the folder name, this repo's commit and whether the clone was dirty, how the run ended (`completed` when the run length's frames were written, `error` with a Watchdog's message, `stopped` when Bonsai was stopped first) and every file in the folder with its size. Its `status` is `partial`: the overnight copy (rig-setup's `rig-sync.ps1`) checks every listed file is present and closed, adds sizes and hashes, writes `complete`, and only then copies the session to the server, the manifest last. A listed file that is missing stops that session's copy and raises an alarm on the rig's health report. `ingest_script` is `coen-behaviour-box`, the name the server's ingest registry runs for this data. Errors on the board's logging chain do not reach the node, so a session whose board log failed reads `stopped`, not `error`.
+Every session folder gets a `manifest.json` (`Logging` > `SessionManifest`, the OpenRigs.Manifest package from coen-openrigs-custom; format: [Coen-Lab/session-manifest](https://github.com/Coen-Lab/session-manifest)'s `SPEC.md`, version 2). It finds the session folder (`PathPrefix`) itself; its one input is the frames recorded. It is written when the session folder exists and again when the run ends:
+- the machine, the subject and session from the folder name;
+- this repo's commit and whether the clone was dirty;
+- Bonsai's command line with each `--property` value;
+- the settings at Go from the session controller (`SubjectId`, `SessionId`, `RunLengthMins`);
+- `rig.yml` as read at Start, with its sha256;
+- how the run ended: `completed` when the run length's frames were written, `error` with a Watchdog's message, `stopped` after a controller stop (with its reason), `ended-early` when the workflow stopped any other way;
+- `expected`: a folder for each device in `rig.yml` this workflow publishes (`BehaviorBoard-Main/`, `Camera-Box/`), with how many files each holds;
+- every file in the folder with its size. Its `status` is `partial`: the overnight copy (rig-setup's `rig-sync.ps1`) checks every listed file is present and closed, adds sizes and hashes, writes `complete`, and only then copies the session to the server, the manifest last. A listed file that is missing, or an expected folder holding nothing (a board that never logged), stops that session's copy and raises an alarm on the rig's health report. `ingest_script` is `coen-behaviour-box`, the name the server's ingest registry runs for this data. Errors on the board's logging chain do not reach the node, so a session whose board log failed reads `ended-early`, not `error`; its empty `BehaviorBoard-Main/` is what says so.
 
 ## Live view
 

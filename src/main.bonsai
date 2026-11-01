@@ -16,9 +16,9 @@
                  xmlns:zmq="clr-namespace:Bonsai.ZeroMQ;assembly=Bonsai.ZeroMQ"
                  xmlns:netmq="clr-namespace:NetMQ;assembly=NetMQ"
                  xmlns:ext="clr-namespace:UclOpenCoenBehaviourBox;assembly=Extensions"
-                 xmlns:clm="clr-namespace:CoenLab.SessionManifest;assembly=Extensions"
                  xmlns:orcl="clr-namespace:OpenRigs.Control;assembly=OpenRigs.Control"
                  xmlns:lv="clr-namespace:OpenRigs.LiveView;assembly=OpenRigs.LiveView"
+                 xmlns:mf="clr-namespace:OpenRigs.Manifest;assembly=OpenRigs.Manifest"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
@@ -836,14 +836,12 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:SubscribeWhen" />
             </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>PathPrefix</Name>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="clm:WriteSessionManifest">
-                <clm:IngestScript>coen-behaviour-box</clm:IngestScript>
-                <clm:RigConfigPath>C:\Coen-Lab-Local\RigConfigs\%COMPUTERNAME%\rig.yml</clm:RigConfigPath>
-              </Combinator>
+            <Expression xsi:type="mf:SessionManifest">
+              <Name>SessionManifest</Name>
+              <Description>Writes manifest.json into the session folder (OpenRigs.Manifest), finding PathPrefix itself: once when the folder appears (status partial, outcome running) and again when the run ends. Its input is the run, the frames recorded: completed when the run length&apos;s frames are written, error with a Watchdog&apos;s message, run.items the frame count; a controller stop is stopped, with the stop&apos;s reason. It records the machine, this repo&apos;s commit, Bonsai&apos;s command line (--property values), the settings at Go (SubjectId, SessionId, RunLengthMins), rig.yml as read at Start, and a folder for each device in rig.yml this workflow publishes (BehaviorBoard-Main/, Camera-Box/), which the overnight copy (rig-sync) alarms on if it holds no file. Errors on the board&apos;s logging chain do not reach it.</Description>
+              <mf:IngestScript>coen-behaviour-box</mf:IngestScript>
+              <mf:ConfigFiles>C:\Coen-Lab-Local\RigConfigs\%COMPUTERNAME%\rig.yml</mf:ConfigFiles>
+              <mf:ExpectedFiles>auto</mf:ExpectedFiles>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>PathPrefix</Name>
@@ -890,12 +888,11 @@
             <Edge From="18" To="19" Label="Source1" />
             <Edge From="20" To="21" Label="Source1" />
             <Edge From="21" To="15" Label="Source2" />
-            <Edge From="26" To="27" Label="Source1" />
-            <Edge From="11" To="27" Label="Source2" />
+            <Edge From="11" To="26" Label="Source1" />
+            <Edge From="27" To="28" Label="Source1" />
             <Edge From="28" To="29" Label="Source1" />
-            <Edge From="29" To="30" Label="Source1" />
-            <Edge From="11" To="31" Label="Source1" />
-            <Edge From="31" To="32" Label="Source1" />
+            <Edge From="11" To="30" Label="Source1" />
+            <Edge From="30" To="31" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
