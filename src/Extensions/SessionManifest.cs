@@ -201,13 +201,21 @@ namespace CoenLab.SessionManifest
             WriteAtomically(manifestPath, Json.Serialize(doc));
         }
 
-        /// <summary>manifest.json.tmp, then the rename, so no reader sees half a file.</summary>
+        /// <summary>manifest.json.tmp, then the rename, so no reader sees half a file. A write that fails takes its .tmp with it.</summary>
         public static void WriteAtomically(string path, string text)
         {
             var tmp = path + ".tmp";
-            File.WriteAllText(tmp, text, new UTF8Encoding(false));
-            if (File.Exists(path)) File.Delete(path);
-            File.Move(tmp, path);
+            try
+            {
+                File.WriteAllText(tmp, text, new UTF8Encoding(false));
+                if (File.Exists(path)) File.Delete(path);
+                File.Move(tmp, path);
+            }
+            catch
+            {
+                try { File.Delete(tmp); } catch (Exception) { }
+                throw;
+            }
         }
 
         public static JsonObject RigSection(string configPath)
