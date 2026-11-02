@@ -6,8 +6,9 @@ param(
 #   1. Compiles src\Extensions under C# 5, the language Bonsai compiles it with.
 #   2. Builds src\main.bonsai with Bonsai's own expression builders, as Bonsai does at Start
 #      before it subscribes anything: every type, selector, include, subject and mapping. It
-#      builds against the template filled in as a rig's, and checks what RecordHarpDevices made
-#      from it and what SessionManifest expects.
+#      checks that every node typed with where rig.yml is has the same root, then builds against
+#      the template filled in as a rig's, and checks what RecordHarpDevices made from it and what
+#      SessionManifest expects.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
 #      and a missing entry or a name breaking the naming rules stops it; and every key in it
 #      reaches the RigSchema JSON the session logs.
@@ -65,6 +66,25 @@ if ($Step -eq 'Build') {
     $template = [IO.File]::ReadAllText((Join-Path $repo 'config\rig-template.yml'))
     $template = $template.Replace('COM-CHANGE-ME', 'COM3').Replace('usbSerial: CHANGE-ME', 'usbSerial: AB0M7PLB').Replace('serialNumber: CHANGE-ME', "serialNumber: '1'").Replace('C:\Data\CHANGE-ME', $bin)
     [IO.File]::WriteAllText($rigYml, $template)
+    # Before they are overwritten below: every node's own copy of where rig.yml is (RigConfig's
+    # ResolveRigConfigDirectory, RecordHarpDevices, SessionManifest's ConfigFiles, LiveView) is
+    # typed by hand into main.bonsai, and they must all be the same root.
+    function Get-ConfigRoots($graph) {
+        foreach ($n in $graph) {
+            $b = [Bonsai.Expressions.ExpressionBuilder]::Unwrap($n.Value)
+            $owner = if ($b -is [Bonsai.Expressions.CombinatorBuilder]) { $b.Combinator } else { $b }
+            if ($owner -and $owner.GetType().Namespace -like 'OpenRigs.*' -and $owner.PSObject.Properties['ConfigRoot']) { "$($owner.GetType().Name)=$($owner.ConfigRoot)" }
+            if ($b.GetType().Name -eq 'SessionManifest') {
+                foreach ($file in $b.ConfigFiles -split ';') { if ($file -match '^(.*)\\%COMPUTERNAME%\\rig\.yml$') { "SessionManifest.ConfigFiles=$($Matches[1])" } }
+            }
+            if ($b -is [Bonsai.Expressions.IWorkflowExpressionBuilder] -and $b.Workflow) { Get-ConfigRoots $b.Workflow }
+        }
+    }
+    $roots = @(Get-ConfigRoots $wb.Workflow)
+    $distinct = @($roots | ForEach-Object { ($_ -split '=', 2)[1].TrimEnd('\') } | Sort-Object -Unique)
+    $rootsOk = $roots.Count -ge 4 -and $distinct.Count -eq 1
+    if ($rootsOk) { "  ok    every node reads rig.yml under the same root, $($distinct[0]) ($($roots.Count) nodes)" }
+    else { "  FAIL  the nodes' rig.yml roots differ, or fewer than 4 were found: $($roots -join '; ')" }
     function Set-ConfigRoot($graph) {
         foreach ($n in $graph) {
             $b = [Bonsai.Expressions.ExpressionBuilder]::Unwrap($n.Value)
@@ -95,7 +115,7 @@ public class BuiltObjects : System.Linq.Expressions.ExpressionVisitor {
 '@
     $objects = New-Object BuiltObjects
     $null = $objects.Visit($built)
-    $failed = 0
+    $failed = if ($rootsOk) { 0 } else { 1 }
     $record = @($objects.Found | Where-Object { $_.GetType().FullName -eq 'OpenRigs.HarpDevices.RecordHarpDevice' })
     if ($record.Count -eq 1 -and $record[0].Name -eq 'BehaviorBoard-Main' -and $record[0].PortName -eq 'COM3' -and $record[0].UsbSerial -eq 'AB0M7PLB' -and $record[0].ExpectedWhoAmI -eq 1216) {
         "  ok    RecordHarpDevices records BehaviorBoard-Main from rig.yml (COM3, usbSerial AB0M7PLB, WhoAmI 1216)"
