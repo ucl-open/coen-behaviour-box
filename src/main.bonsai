@@ -417,7 +417,7 @@
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>Camera</Name>
-              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Subscribed once rig.yml is read (RigConfig), at Start and before Go, so the preview streams in ready mode; the first frame reports Ready to the controller. Watchdog stops the workflow with a message of its own if no frame arrives for 15 s (usually the trigger cable). The frames are published as Camera-Box.Data, which the live view streams; the last two nodes take 5 images a second from them for the editor's preview window (config\main.layout), from Start, so it shows the camera in ready mode. ExposureTime and Gain are session parameters: each starts at Camera-Box's (rig.yml's) value and takes each value the controller sets (OnParameterSet) straight to the open camera, so the preview shows the change while ready; Go fixes them. One second after Start, once the controller's server is up, ParameterDefault shows rig.yml's values as the parameters' values, and ParameterMaximum limits a set exposure to the trigger period less 1000 us, so a longer one is refused at the controller instead of stopping the workflow. Binning is taken only when the camera opens.</Description>
+              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Subscribed once rig.yml is read (RigConfig), at Start and before Go, so the preview streams in ready mode; the first frame reports Ready to the controller. Watchdog stops the workflow with a message of its own if no frame arrives for 15 s (usually the trigger cable). The frames are published as Camera-Box.Data, which the live view streams; Value.Image and SampleInterval take 5 images a second from them for the editor's preview window (config\main.layout), from Start, so it shows the camera in ready mode, and the last three nodes show beside it the exposure and gain the camera reports for its frames (CameraSettings). ExposureTime and Gain are session parameters: each starts at Camera-Box's (rig.yml's) value and takes each value the controller sets (OnParameterSet) straight to the open camera, so the preview shows the change while ready; Go fixes them. One second after Start, once the controller's server is up, ParameterDefault shows rig.yml's values as the parameters' values, and ParameterMaximum limits a set exposure to the trigger period less 1000 us, so a longer one is refused at the controller instead of stopping the workflow. Binning is taken only when the camera opens.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -577,6 +577,19 @@
                       <orcl:Name>ExposureTime</orcl:Name>
                     </Combinator>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Camera-Box.Data</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:SampleInterval">
+                      <rx:Interval>PT0.2S</rx:Interval>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Name>CameraSettings</scr:Name>
+                    <scr:Description>The exposure and gain the camera reports for its frames (chunk data), 5 a second, for the editor's readout window (config\main.layout): what the camera took, not what was asked for.</scr:Description>
+                    <scr:Expression>"Exposure " + Value.ChunkData.ExposureTime.ToString("F0") + " us   Gain " + Value.ChunkData.Gain.ToString("F2") + " dB"</scr:Expression>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
@@ -615,6 +628,8 @@
                   <Edge From="35" To="36" Label="Source1" />
                   <Edge From="32" To="37" Label="Source1" />
                   <Edge From="37" To="38" Label="Source1" />
+                  <Edge From="39" To="40" Label="Source1" />
+                  <Edge From="40" To="41" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>

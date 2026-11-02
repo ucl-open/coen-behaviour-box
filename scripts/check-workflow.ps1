@@ -8,7 +8,7 @@ param(
 #      before it subscribes anything: every type, selector, include, subject and mapping. It
 #      checks that every node typed with where rig.yml is has the same root, then builds against
 #      the template filled in as a rig's, and checks what RecordHarpDevices made from it and what
-#      SessionManifest expects.
+#      SessionManifest expects, and that each window in config\main.layout is on a node it fits.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
 #      and a missing entry or a name breaking the naming rules stops it; and every key in it
 #      reaches the RigSchema JSON the session logs.
@@ -131,6 +131,36 @@ public class BuiltObjects : System.Linq.Expressions.ExpressionVisitor {
         "  FAIL  SessionManifest expects '$($expected -join ', ')', not '$($want -join ', ')'"; $failed++
         if ($planField) { foreach ($note in $planField.GetValue($recorder[0]).Notes) { "        its note: $note" } }
     }
+    # config\main.layout's windows, on the nodes as the editor has them: Bonsai loads each group
+    # in topological order, not file order, so a node fed from later in the file moves up and
+    # shifts the indices after it (3096c9f moved the preview's SampleInterval from 14 to 28). A
+    # window on the wrong node makes the editor offer to delete the layout, and --start waits.
+    $inspectable = [Bonsai.Expressions.ExpressionBuilderGraphExtensions]::ToInspectableGraph($wb.Workflow)
+    $null = [Bonsai.Expressions.ExpressionBuilderGraphExtensions]::Build($inspectable)
+    $wanted = @{ 'Bonsai.Vision.Design.IplImageVisualizer' = 'OpenCV.Net.IplImage'; 'Bonsai.Design.ObjectTextVisualizer' = '' }
+    function Test-Layout($settings, $graph, $where) {
+        $nodes = @($graph)
+        foreach ($window in $settings.WindowSettings) {
+            $i = [int]$window.Index
+            if ($i -ge $nodes.Count) { "  FAIL  layout $where$i`: the workflow has $($nodes.Count) nodes there"; continue }
+            $node = $nodes[$i].Value
+            $at = "$where$i ($($node.Builder.GetType().Name))"
+            if ($window.NestedLayout) {
+                if ($node.Builder -is [Bonsai.Expressions.IWorkflowExpressionBuilder]) { Test-Layout $window.NestedLayout $node.Builder.Workflow "$at > " }
+                else { "  FAIL  layout $at holds windows but is not a group" }
+            }
+            if ($window.VisualizerTypeName) {
+                $type = $wanted[$window.VisualizerTypeName]
+                if ($null -eq $type) { "  FAIL  layout $at`: $($window.VisualizerTypeName) is not one this check knows" }
+                elseif ($type -and "$($node.ObservableType)" -ne $type) { "  FAIL  layout $at`: $($window.VisualizerTypeName) on a node of $($node.ObservableType), not $type" }
+                else { "  ok    layout window $($window.VisualizerTypeName) on $at" }
+            }
+        }
+    }
+    [xml]$layout = Get-Content (Join-Path $repo 'config\main.layout') -Raw
+    $layoutLines = @(Test-Layout $layout.VisualizerLayout $inspectable '')
+    $layoutLines
+    $failed += @($layoutLines | Where-Object { $_ -like '  FAIL*' }).Count
     exit $(if ($failed) { 1 } else { 0 })
 }
 

@@ -85,16 +85,18 @@ Write-Output "Creating a Bonsai environment and installing packages..."
 &.\.bonsai\Setup.cmd
 Assert-Success "Installing Bonsai and its packages"
 
-# The editor's window layout is per machine (gitignored). A machine without one gets
-# config\main.layout: the 5 Hz camera preview (Logging > RecordVideo > SampleInterval) opens at Start.
+# The editor reads its window layout from a per-machine file (gitignored), which a save in the
+# editor overwrites. The workflow's layout is config\main.layout: the 5 Hz camera preview and the
+# camera's exposure and gain (Hardware > Camera), open at Start. It replaces the machine's every
+# deploy; a different one is kept beside it as main.saved.layout.
 $layout = ".\.bonsai\Settings\src\main.layout"
-if (Test-Path -Path $layout) {
-    Write-Output "Keeping the existing $layout (delete it and re-run deploy for config\main.layout, the camera preview)."
-} else {
-    New-Item -ItemType Directory -Path (Split-Path -Parent $layout) -Force | Out-Null
-    Copy-Item ".\config\main.layout" $layout
-    Write-Output "Created $layout from config\main.layout (camera preview opens at Start)."
+New-Item -ItemType Directory -Path (Split-Path -Parent $layout) -Force | Out-Null
+if ((Test-Path -Path $layout) -and ((Get-FileHash $layout).Hash -ne (Get-FileHash ".\config\main.layout").Hash)) {
+    Copy-Item $layout ".\.bonsai\Settings\src\main.saved.layout" -Force
+    Write-Output "Kept the machine's own layout as .bonsai\Settings\src\main.saved.layout."
 }
+Copy-Item ".\config\main.layout" $layout -Force
+Write-Output "$layout is config\main.layout (camera preview and exposure and gain open at Start)."
 
 # The video is encoded by ffmpeg.exe, which Bonsai.FFmpeg starts from PATH, on Intel Quick Sync
 # (h264_qsv). Without it, recording stops as soon as the first video file opens.
