@@ -64,7 +64,7 @@ If no frame arrives for 15 s, the workflow stops with "No frame from the camera 
 
 ## Session manifest
 
-Every session folder gets a `manifest.json` (`Logging` > `SessionManifest`, the OpenRigs.Manifest package from coen-openrigs-custom; format: [Coen-Lab/session-manifest](https://github.com/Coen-Lab/session-manifest)'s `SPEC.md`, version 2). It finds the session folder (`PathPrefix`) itself; its one input is the frames recorded. It is written when the session folder exists and again when the run ends:
+Every session folder gets a `manifest.json` (`Logging` > `SessionManifest`, the OpenRigs.Manifest package from coen-openrigs-custom; format: its [`FORMAT.md`](https://github.com/ucl-open/coen-openrigs-custom/blob/main/src/OpenRigs.Manifest/FORMAT.md), version 2). It finds the session folder (`PathPrefix`) itself; its one input is the frames recorded. It is written when the session folder exists and again when the run ends:
 - the machine, the subject and session from the folder name;
 - this repo's commit and whether the clone was dirty;
 - Bonsai's command line with each `--property` value;
