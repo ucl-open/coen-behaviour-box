@@ -7,9 +7,10 @@ param(
 #   2. Builds src\main.bonsai with Bonsai's own expression builders, as Bonsai does at Start
 #      before it subscribes anything: every type, selector, include, subject and mapping.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
-#      and a missing entry or a name breaking the naming rules stops it.
+#      and a missing entry or a name breaking the naming rules stops it; and every key in it
+#      reaches the RigSchema JSON the session logs.
 #   4. ExposureFitsTrigger's limit (19,000 us passes at 50 Hz, 19,001 and 30,000 stop),
-#      SessionKey on a session folder's path, Watchdog's own message, and CameraOverrides'
+#      SessionKey on a session folder's path, HarpDeviceSchema's register map, Watchdog's own message, and CameraOverrides'
 #      refusal without a "Parameter name" line; in main.bonsai, every timeout is a Watchdog with a message.
 # Needs a deployed clone (scripts\deploy.cmd: .bonsai\Packages). Exit 0 when all four pass.
 $ErrorActionPreference = 'Stop'
@@ -114,6 +115,32 @@ if ($Step -eq 'RigDevice') {
             else { "  FAIL  $($c[1]): $($x.GetType().Name): $($x.Message)"; $failed++ }
         }
     }
+    # The session's RigSchema JSON is rig.yml as parsed, and the manifest keeps only rig.yml's hash
+    # (OpenRigs.Manifest 0.1.0-local.7), so every key in rig.yml must reach the JSON.
+    try {
+        $x = $E::Constant([System.Reactive.Linq.Observable]::Return($yaml), [IObservable[string]])
+        $des = New-Object UclOpenCoenBehaviourBox.DeserializeFromYaml
+        $des.Type = [Activator]::CreateInstance([Bonsai.Expressions.TypeMapping`1].MakeGenericType([UclOpenCoenBehaviourBox.UclOpenCoenBehaviourBoxRig]))
+        $x = $des.Build([Linq.Expressions.Expression[]]@($x))
+        $cb = New-Object Bonsai.Expressions.CombinatorBuilder
+        $ser = New-Object UclOpenCoenBehaviourBox.SerializeToJson; $ser.Formatting = 'Indented'; $cb.Combinator = $ser
+        $x = $cb.Build([Linq.Expressions.Expression[]]@($x))
+        $json = $E::Lambda($E::Call($wait.MakeGenericMethod([string]), $x)).Compile().DynamicInvoke()
+        # A foreach statement, not a pipeline: a pipeline unrolls each JObject into its properties.
+        $jsonKeys = New-Object System.Collections.Generic.List[string]
+        foreach ($t in [Newtonsoft.Json.Linq.JToken]::Parse($json).Descendants()) {
+            if ($t -is [Newtonsoft.Json.Linq.JProperty]) { $jsonKeys.Add(($t.Path -replace '\[\d+\]', '[]')) }
+        }
+        $yamlKeys = New-Object System.Collections.Generic.List[string]
+        function Add-YamlKeys($node, [string]$at) {
+            if ($node -is [System.Collections.IDictionary]) { foreach ($k in $node.Keys) { $p = if ($at) { "$at.$k" } else { "$k" }; $yamlKeys.Add($p); Add-YamlKeys $node[$k] $p } }
+            elseif ($node -is [System.Collections.IList]) { foreach ($i in $node) { Add-YamlKeys $i "$at[]" } }
+        }
+        Add-YamlKeys ((New-Object YamlDotNet.Serialization.Deserializer).Deserialize((New-Object IO.StringReader $yaml))) ''
+        $lost = @($yamlKeys | Where-Object { $jsonKeys -notcontains $_ })
+        if ($yamlKeys.Count -gt 0 -and $lost.Count -eq 0) { "  ok    RigSchema JSON keeps all $($yamlKeys.Count) keys of rig-template.yml" }
+        else { "  FAIL  RigSchema JSON lost $($lost.Count) of $($yamlKeys.Count) keys of rig-template.yml: $($lost -join ', ')"; $failed++ }
+    } catch { $x = $_.Exception; while ($x.InnerException) { $x = $x.InnerException }; "  FAIL  RigSchema JSON: $($x.Message)"; $failed++ }
     exit $(if ($failed) { 1 } else { 0 })
 }
 
@@ -139,6 +166,14 @@ if ($Step -eq 'Checks') {
     if ($x -and $x.Message.Contains('does not end in sub-')) { "  ok    SessionKey refused a path that is not a session folder" } else { "  FAIL  SessionKey accepted 'C:\Data\not-a-session'"; $failed++ }
     $x = Get-Refusal { [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\sub-M1\ses-03/1_date-2026-10-30T17-46-16') }
     if ($x -and $x.Message.Contains('in SubjectId or SessionId')) { "  ok    SessionKey refused a SessionId with a slash, naming the cause" } else { "  FAIL  SessionKey on a SessionId with a slash: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
+    $session = Join-Path ([IO.Path]::GetTempPath()) ("hds-" + [guid]::NewGuid().ToString('N'))
+    try {
+        $yml = [UclOpenCoenBehaviourBox.HarpDeviceSchema]::Write($session, 'BehaviorBoard-Main')
+        $text = if (Test-Path $yml) { [IO.File]::ReadAllText($yml) } else { '' }
+        if ($yml -eq (Join-Path $session 'BehaviorBoard-Main\BehaviorBoard-Main.yml') -and $text -match '(?m)^registers:' -and $text -match '(?m)^\s+AnalogData:' -and -not (Test-Path "$yml.tmp")) {
+            "  ok    HarpDeviceSchema wrote Harp.Behavior's register map to BehaviorBoard-Main\BehaviorBoard-Main.yml"
+        } else { "  FAIL  HarpDeviceSchema wrote '$yml' ($($text.Length) chars)"; $failed++ }
+    } finally { Remove-Item $session -Recurse -Force -ErrorAction SilentlyContinue }
 
     # The Rx operators below run on worker threads: load everything now and drop the resolver,
     # as the RigDevice step does, so no scriptblock is called from those threads.
