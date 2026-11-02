@@ -871,11 +871,12 @@
               <Name>PathPrefix</Name>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:SubscribeWhen" />
+              <Combinator xsi:type="rx:Zip" />
             </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:LogDataSchema.bonsai">
-              <Name>RigSchema</Name>
-              <Description>The rig settings the workflow ran with, rig.yml as parsed (every key in it: the parse refuses one the schema does not know), into RigSchema\RigSchema_&lt;DateTime&gt;.json once the session folder exists (the Open Rigs logging spec, section 6). The manifest names rig.yml by path and hash only; this is the session's copy of it.</Description>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="ext:SessionJson">
+                <ext:Name>RigSchema</ext:Name>
+              </Combinator>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>PathPrefix</Name>
@@ -927,10 +928,10 @@
             <Edge From="28" To="29" Label="Source1" />
             <Edge From="11" To="30" Label="Source1" />
             <Edge From="30" To="31" Label="Source1" />
-            <Edge From="32" To="34" Label="Source1" />
+            <Edge From="32" To="40" Label="Source1" />
+            <Edge From="40" To="34" Label="Source1" />
             <Edge From="33" To="34" Label="Source2" />
-            <Edge From="34" To="40" Label="Source1" />
-            <Edge From="40" To="35" Label="Source1" />
+            <Edge From="34" To="35" Label="Source1" />
             <Edge From="36" To="37" Label="Source1" />
             <Edge From="38" To="39" Label="Source1" />
             <Edge From="39" To="37" Label="Source2" />

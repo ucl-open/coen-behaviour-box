@@ -173,6 +173,13 @@ if ($Step -eq 'Checks') {
         if ($yml -eq (Join-Path $session 'BehaviorBoard-Main\BehaviorBoard-Main.yml') -and $text -match '(?m)^registers:' -and $text -match '(?m)^\s+AnalogData:' -and -not (Test-Path "$yml.tmp")) {
             "  ok    HarpDeviceSchema wrote Harp.Behavior's register map to BehaviorBoard-Main\BehaviorBoard-Main.yml"
         } else { "  FAIL  HarpDeviceSchema wrote '$yml' ($($text.Length) chars)"; $failed++ }
+        $json = [UclOpenCoenBehaviourBox.SessionJson]::Write($session, 'RigSchema', '{"a":1}', [datetime]::SpecifyKind([datetime]'2026-11-02T09:05:07', 'Utc'))
+        if ($json -eq (Join-Path $session 'RigSchema\RigSchema_2026-11-02T09-05-07.json') -and [IO.File]::ReadAllText($json) -eq '{"a":1}' -and -not (Test-Path "$json.tmp")) {
+            "  ok    SessionJson wrote RigSchema\RigSchema_<DateTime>.json under the session folder it was given"
+        } else { "  FAIL  SessionJson wrote '$json'"; $failed++ }
+        # LogDataSchema in OpenRigs.Logging 0.1.0-bbox.1 reads its file name before the session folder exists.
+        if ((Get-Content (Join-Path $repo 'src\main.bonsai') -Raw) -match 'LogDataSchema\.bonsai') { "  FAIL  main.bonsai uses LogDataSchema, which writes to the include's saved path in this build"; $failed++ }
+        else { "  ok    main.bonsai does not use LogDataSchema" }
     } finally { Remove-Item $session -Recurse -Force -ErrorAction SilentlyContinue }
 
     # The Rx operators below run on worker threads: load everything now and drop the resolver,

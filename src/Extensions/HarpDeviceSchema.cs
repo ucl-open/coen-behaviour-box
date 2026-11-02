@@ -25,8 +25,8 @@ namespace UclOpenCoenBehaviourBox
 
         public IObservable<string> Process(IObservable<string> source)
         {
-            var name = Name;
-            return source.Do(pathPrefix => Write(pathPrefix, name));
+            // Name read at the write, not here: the workflow maps it from the board's subject, after it is built.
+            return source.Do(pathPrefix => Write(pathPrefix, Name));
         }
 
         /// <summary>The written file's path. A .tmp then a rename, so no reader sees half of it.</summary>
