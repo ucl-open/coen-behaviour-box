@@ -4,7 +4,7 @@
 
 ## OpenRigs.Core, OpenRigs.Devices, OpenRigs.Logging, OpenRigs.Streaming, OpenRigs.Video
 
-`local_packages/OpenRigs.*.0.1.0-bbox.1.nupkg` are built from [open-rigs](https://github.com/open-rigs/open-rigs) at `3788bfbb0946bd5a8e5ade321da9815cc1ff1c07` with the two camera patches in [coen-openrigs-custom](https://github.com/ucl-open/coen-openrigs-custom) `patches/` (see its `patches/README.md`). They are redistributed under the open-rigs BSD 3-Clause License:
+`local_packages/OpenRigs.*.0.1.0-bbox.1.nupkg` are built from [open-rigs](https://github.com/open-rigs/open-rigs) at `3788bfbb0946bd5a8e5ade321da9815cc1ff1c07` with the two camera fixes that are commits on the lab's fork, [lib-open-rigs](https://github.com/Coen-Lab/lib-open-rigs) (see its `patches/README.md`). They are redistributed under the open-rigs BSD 3-Clause License:
 
 ```
 BSD 3-Clause License
@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 [Bonsai.FFmpeg](https://github.com/bonsai-rx/ffmpeg) 0.2.0 (commit
 `ee403aeca3d6ecb214487a5c41d94b2f2b541526`). The change gives each recording its own named pipe, so
 starting a recording while the previous one is still being encoded no longer fails with "All pipe
-instances are busy." The patch is coen-openrigs-custom `patches/bonsai-ffmpeg-unique-pipe.patch`.
+instances are busy." The patch is lib-open-rigs `patches/bonsai-ffmpeg-unique-pipe.patch`.
 It is redistributed under the MIT License, carried in the package's `LICENSE` file:
 
 ```
@@ -70,7 +70,7 @@ SOFTWARE.
 
 ## OpenRigs.Control, OpenRigs.LiveView
 
-`local_packages/OpenRigs.Control.0.1.0-local.3.nupkg` and `local_packages/OpenRigs.LiveView.0.1.0-local.2.nupkg` are built from the Coen Lab's [coen-openrigs-custom](https://github.com/ucl-open/coen-openrigs-custom) with its `scripts\build-package.ps1`. They are redistributed under its MIT License:
+`local_packages/OpenRigs.Control.0.1.0-local.3.nupkg` and `local_packages/OpenRigs.LiveView.0.1.0-local.2.nupkg` are built from the Coen Lab's [lib-open-rigs](https://github.com/Coen-Lab/lib-open-rigs) with its `scripts\build-package.ps1`. They are redistributed under its MIT License:
 
 ```
 MIT License

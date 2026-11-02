@@ -64,7 +64,7 @@ if ($Step -eq 'Build') {
     $null = New-Item -ItemType Directory -Path $rigDir -Force
     $rigYml = Join-Path $rigDir 'rig.yml'
     $template = [IO.File]::ReadAllText((Join-Path $repo 'config\rig-template.yml'))
-    $template = $template.Replace('COM-CHANGE-ME', 'COM3').Replace('usbSerial: CHANGE-ME', 'usbSerial: AB0M7PLB').Replace('serialNumber: CHANGE-ME', "serialNumber: '1'").Replace('C:\Data\CHANGE-ME', $bin)
+    $template = $template.Replace('COM-CHANGE-ME', 'COM3').Replace('usbSerial: CHANGE-ME', 'usbSerial: AB0M7PLB').Replace('rigId: CHANGE-ME', 'rigId: B1').Replace('serialNumber: CHANGE-ME', "serialNumber: '1'").Replace('C:\Data\CHANGE-ME', $bin)
     [IO.File]::WriteAllText($rigYml, $template)
     # Before they are overwritten below: every node's own copy of where rig.yml is (RigConfig's
     # ResolveRigConfigDirectory, RecordHarpDevices, SessionManifest's ConfigFiles, LiveView) is

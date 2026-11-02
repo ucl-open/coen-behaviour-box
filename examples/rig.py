@@ -21,13 +21,15 @@ HEADER = """\
 # is missing. The frame rate is behaviorBoard.main.cameraTriggerController.trigger0Frequency;
 # camera.box.triggerFrequency and trigger1Frequency are not used by this rig. usbSerial is the
 # board's USB serial, as the rig's hardware scan lists it for portName: the workflow stops at
-# Start if the board on portName has another.
+# Start if the board on portName has another. rigId is the rig's code (B1 GEEK-BBOX1, D1 and D2
+# the green domes, O1 and O2 the blue opto rigs, A1 PINK-ACUTE), the end of every session ID.
 """
 
 # Placeholder values only: they must look wrong until a rig fills them in. The trigger rate,
 # encoder resolution and wheel size are the box's design values; a rig changes them only if its
 # hardware differs.
 rig = UclOpenCoenBehaviourBoxRig(
+    rig_id="CHANGE-ME",
     root_path="C:\\Data\\CHANGE-ME",
     behavior_board={
         "main": BehaviorBoard(

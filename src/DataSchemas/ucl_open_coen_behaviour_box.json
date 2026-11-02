@@ -441,6 +441,15 @@
           "title": "RootPath",
           "type": "string"
         },
+        "rigId": {
+          "default": null,
+          "description": "A short code naming this rig, kept when another computer takes over its job, for labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its form is the lab's to decide.",
+          "title": "RigId",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "version": {
           "const": "0.0.0-rc1",
           "default": "0.0.0-rc1",

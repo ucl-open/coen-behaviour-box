@@ -1329,6 +1329,8 @@ namespace UclOpenCoenBehaviourBox
     
         private string _rootPath;
     
+        private string _rigId;
+    
         private string _version;
     
         private System.Collections.Generic.Dictionary<string, BehaviorBoard> _behaviorBoard;
@@ -1345,6 +1347,7 @@ namespace UclOpenCoenBehaviourBox
         protected UclOpenCoenBehaviourBoxRig(UclOpenCoenBehaviourBoxRig other)
         {
             _rootPath = other._rootPath;
+            _rigId = other._rigId;
             _version = other._version;
             _behaviorBoard = other._behaviorBoard;
             _camera = other._camera;
@@ -1365,6 +1368,26 @@ namespace UclOpenCoenBehaviourBox
             set
             {
                 _rootPath = value;
+            }
+        }
+    
+        /// <summary>
+        /// A short code naming this rig, kept when another computer takes over its job, for labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its form is the lab's to decide.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("rigId")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="rigId")]
+        [System.ComponentModel.DescriptionAttribute("A short code naming this rig, kept when another computer takes over its job, for " +
+            "labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its" +
+            " form is the lab\'s to decide.")]
+        public string RigId
+        {
+            get
+            {
+                return _rigId;
+            }
+            set
+            {
+                _rigId = value;
             }
         }
     
@@ -1435,6 +1458,7 @@ namespace UclOpenCoenBehaviourBox
         protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
         {
             stringBuilder.Append("RootPath = " + _rootPath + ", ");
+            stringBuilder.Append("RigId = " + _rigId + ", ");
             stringBuilder.Append("Version = " + _version + ", ");
             stringBuilder.Append("BehaviorBoard = " + _behaviorBoard + ", ");
             stringBuilder.Append("Camera = " + _camera);
