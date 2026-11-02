@@ -4,7 +4,7 @@
 
 Fixed in the same round: OpenRigs.HarpDevices 0.1.0-local.2 and OpenRigs.Manifest 0.1.0-local.9 (coen-openrigs-custom's BACKLOG); the README named the dump's file `BehaviorBoard-Main_<address>_<DateTime>.bin`, where the session has it in `BehaviorBoard-Main_<DateTime>.bin`; the Clock group's description still said Logging asks for the dump after BoardClockSet; `check-workflow.ps1` overwrote every node's rig.yml root before building, so main.bonsai's four hand-typed copies (RigConfig, RecordHarpDevices, SessionManifest's ConfigFiles, LiveView) could disagree unseen, and now checks they agree first.
 
-- rig-setup flagging a missing `usbSerial`: the av-dome rig.yml files (BLUE-OPTO-1/2, GREEN-DOME-1) have many `portName` entries without one; only GEEK-BBOX1 is affected, once, and its Start refusal gives the line to add.
+- rig-setup flagging a missing `usbSerial`: the av-dome rig.yml files (BLUE-OPTO-1/2, GREEN-DOME-1) have many `portName` entries without one; only GEEK-BBOX1 is affected, once, and its Start refusal gives the line to add. Reopened and built the same day (Pip: the serials "added via the interface"): rig-setup's Hardware panel shows the board on each port and saves its serial with Use This Board, and its rig configuration row asks for a missing one, both only once the rig's clone of this repo takes `usbSerial` (rig-setup BACKLOG, "Boards and Use This Board").
 - `usbSerial` required in the schema for `behaviorBoard` only: it is the only Harp kind in this schema, and `RecordHarpDevices` requires it of any Harp device.
 - Per-rig layouts after the Logging node shift: rig-control runs headless and the camera preview's index did not move; delete the rig's layout if the editor complains.
 
