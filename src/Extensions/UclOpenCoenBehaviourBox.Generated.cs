@@ -21,13 +21,13 @@ namespace UclOpenCoenBehaviourBox
     
         private string _portName;
     
+        private string _usbSerial;
+    
         private PulseController _pulseController;
     
         private CameraTriggerController _cameraTriggerController;
     
         private RunningWheel _runningWheel;
-    
-        private string _usbSerial;
     
         private LiveView _liveView;
     
@@ -38,10 +38,10 @@ namespace UclOpenCoenBehaviourBox
         protected BehaviorBoard(BehaviorBoard other)
         {
             _portName = other._portName;
+            _usbSerial = other._usbSerial;
             _pulseController = other._pulseController;
             _cameraTriggerController = other._cameraTriggerController;
             _runningWheel = other._runningWheel;
-            _usbSerial = other._usbSerial;
             _liveView = other._liveView;
         }
     
@@ -60,6 +60,26 @@ namespace UclOpenCoenBehaviourBox
             set
             {
                 _portName = value;
+            }
+        }
+    
+        /// <summary>
+        /// The board's USB serial number, its FTDI chip's (AB0M7PLB): which board this is. OpenRigs.HarpDevices stops the workflow at Start if the board on portName has another. The rig's hardware scan lists each port's (serialPorts, usbSerial).
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("usbSerial", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="usbSerial")]
+        [System.ComponentModel.DescriptionAttribute("The board\'s USB serial number, its FTDI chip\'s (AB0M7PLB): which board this is. O" +
+            "penRigs.HarpDevices stops the workflow at Start if the board on portName has ano" +
+            "ther. The rig\'s hardware scan lists each port\'s (serialPorts, usbSerial).")]
+        public string UsbSerial
+        {
+            get
+            {
+                return _usbSerial;
+            }
+            set
+            {
+                _usbSerial = value;
             }
         }
     
@@ -121,26 +141,6 @@ namespace UclOpenCoenBehaviourBox
         }
     
         /// <summary>
-        /// The board's USB serial number, its FTDI chip's (AB0M7PLB): which board this is. OpenRigs.HarpDevices stops the workflow at Start if the board on portName has another. The rig's hardware scan lists each port's (serialPorts, usbSerial).
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("usbSerial", Required=Newtonsoft.Json.Required.Always)]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="usbSerial")]
-        [System.ComponentModel.DescriptionAttribute("The board\'s USB serial number, its FTDI chip\'s (AB0M7PLB): which board this is. O" +
-            "penRigs.HarpDevices stops the workflow at Start if the board on portName has ano" +
-            "ther. The rig\'s hardware scan lists each port\'s (serialPorts, usbSerial).")]
-        public string UsbSerial
-        {
-            get
-            {
-                return _usbSerial;
-            }
-            set
-            {
-                _usbSerial = value;
-            }
-        }
-    
-        /// <summary>
         /// Live view settings for this board (OpenRigs.LiveView).
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
@@ -172,10 +172,10 @@ namespace UclOpenCoenBehaviourBox
         protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
         {
             stringBuilder.Append("PortName = " + _portName + ", ");
+            stringBuilder.Append("UsbSerial = " + _usbSerial + ", ");
             stringBuilder.Append("PulseController = " + _pulseController + ", ");
             stringBuilder.Append("CameraTriggerController = " + _cameraTriggerController + ", ");
             stringBuilder.Append("RunningWheel = " + _runningWheel + ", ");
-            stringBuilder.Append("UsbSerial = " + _usbSerial + ", ");
             stringBuilder.Append("LiveView = " + _liveView);
             return true;
         }

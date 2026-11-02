@@ -11,6 +11,11 @@
           "title": "PortName",
           "type": "string"
         },
+        "usbSerial": {
+          "description": "The board's USB serial number, its FTDI chip's (AB0M7PLB): which board this is. OpenRigs.HarpDevices stops the workflow at Start if the board on portName has another. The rig's hardware scan lists each port's (serialPorts, usbSerial).",
+          "title": "UsbSerial",
+          "type": "string"
+        },
         "pulseController": {
           "anyOf": [
             {
@@ -49,11 +54,6 @@
           "default": null,
           "description": "Optional RunningWheelModule module to define wheel geometry.",
           "title": "RunningWheel"
-        },
-        "usbSerial": {
-          "description": "The board's USB serial number, its FTDI chip's (AB0M7PLB): which board this is. OpenRigs.HarpDevices stops the workflow at Start if the board on portName has another. The rig's hardware scan lists each port's (serialPorts, usbSerial).",
-          "title": "UsbSerial",
-          "type": "string"
         },
         "liveView": {
           "anyOf": [
