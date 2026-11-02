@@ -5,12 +5,14 @@ param(
 # Checks a change to src\ without the rig and without opening Bonsai: no window, no device.
 #   1. Compiles src\Extensions under C# 5, the language Bonsai compiles it with.
 #   2. Builds src\main.bonsai with Bonsai's own expression builders, as Bonsai does at Start
-#      before it subscribes anything: every type, selector, include, subject and mapping.
+#      before it subscribes anything: every type, selector, include, subject and mapping. It
+#      builds against the template filled in as a rig's, and checks what RecordHarpDevices made
+#      from it and what SessionManifest expects.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
 #      and a missing entry or a name breaking the naming rules stops it; and every key in it
 #      reaches the RigSchema JSON the session logs.
 #   4. ExposureFitsTrigger's limit (19,000 us passes at 50 Hz, 19,001 and 30,000 stop),
-#      SessionKey on a session folder's path, HarpDeviceSchema's register map, Watchdog's own message, and CameraOverrides'
+#      SessionKey on a session folder's path, no dump or register map of the workflow's own, Watchdog's own message, and CameraOverrides'
 #      refusal without a "Parameter name" line; in main.bonsai, every timeout is a Watchdog with a message.
 # Needs a deployed clone (scripts\deploy.cmd: .bonsai\Packages). Exit 0 when all four pass.
 $ErrorActionPreference = 'Stop'
@@ -54,14 +56,62 @@ if ($Step -eq 'Build') {
     }
     $reader = [Xml.XmlReader]::Create($workflow)
     try { $wb = [Bonsai.WorkflowBuilder]::Serializer.Deserialize($reader) } finally { $reader.Close() }
+    # The nodes that read rig.yml when the workflow is built (RecordHarpDevices, StreamDevices,
+    # SessionManifest) read a copy of the template with its placeholders filled, as a rig's, so
+    # the build makes what it makes on a rig: this machine need not have a rig.yml.
+    $rigDir = Join-Path $bin "config\$([Environment]::MachineName)"
+    $null = New-Item -ItemType Directory -Path $rigDir -Force
+    $rigYml = Join-Path $rigDir 'rig.yml'
+    $template = [IO.File]::ReadAllText((Join-Path $repo 'config\rig-template.yml'))
+    $template = $template.Replace('COM-CHANGE-ME', 'COM3').Replace('usbSerial: CHANGE-ME', 'usbSerial: AB0M7PLB').Replace('serialNumber: CHANGE-ME', "serialNumber: '1'").Replace('C:\Data\CHANGE-ME', $bin)
+    [IO.File]::WriteAllText($rigYml, $template)
+    function Set-ConfigRoot($graph) {
+        foreach ($n in $graph) {
+            $b = [Bonsai.Expressions.ExpressionBuilder]::Unwrap($n.Value)
+            if ($b.GetType().Namespace -like 'OpenRigs.*' -and $b.PSObject.Properties['ConfigRoot']) { $b.ConfigRoot = Join-Path $bin 'config' }
+            if ($b.GetType().Name -eq 'SessionManifest') { $b.ConfigFiles = $rigYml }
+            if ($b -is [Bonsai.Expressions.IWorkflowExpressionBuilder] -and $b.Workflow) { Set-ConfigRoot $b.Workflow }
+        }
+    }
+    Set-ConfigRoot $wb.Workflow
     try {
-        $null = [Bonsai.Expressions.ExpressionBuilderGraphExtensions]::Build($wb.Workflow)
+        $built = [Bonsai.Expressions.ExpressionBuilderGraphExtensions]::Build($wb.Workflow)
     } catch {
         $x = $_.Exception
         while ($x) { "  $($x.GetType().Name): $($x.Message)"; $x = $x.InnerException }
         exit 1
     }
-    exit 0
+    # What the build made, read from the objects in the built expression: RecordHarpDevices'
+    # record and dump request for the board, and SessionManifest's expected files (harp: the
+    # board's record and register map).
+    Add-Type -ReferencedAssemblies System.Core -TypeDefinition @'
+public class BuiltObjects : System.Linq.Expressions.ExpressionVisitor {
+    public System.Collections.Generic.List<object> Found = new System.Collections.Generic.List<object>();
+    protected override System.Linq.Expressions.Expression VisitConstant(System.Linq.Expressions.ConstantExpression node) {
+        if (node.Value != null) Found.Add(node.Value);
+        return base.VisitConstant(node);
+    }
+}
+'@
+    $objects = New-Object BuiltObjects
+    $null = $objects.Visit($built)
+    $failed = 0
+    $record = @($objects.Found | Where-Object { $_.GetType().FullName -eq 'OpenRigs.HarpDevices.RecordHarpDevice' })
+    if ($record.Count -eq 1 -and $record[0].Name -eq 'BehaviorBoard-Main' -and $record[0].PortName -eq 'COM3' -and $record[0].UsbSerial -eq 'AB0M7PLB' -and $record[0].ExpectedWhoAmI -eq 1216) {
+        "  ok    RecordHarpDevices records BehaviorBoard-Main from rig.yml (COM3, usbSerial AB0M7PLB, WhoAmI 1216)"
+    } else { "  FAIL  RecordHarpDevices made $($record.Count) record(s): $(@($record | ForEach-Object { $_.Name }) -join ', ')"; $failed++ }
+    $dumps = @($objects.Found | Where-Object { $_.GetType().FullName -eq 'OpenRigs.HarpDevices.RequestRegisterDump' }).Count
+    if ($dumps -eq 1) { "  ok    ... and asks for its dump on BehaviorBoard-Main.Commands" } else { "  FAIL  $dumps dump request(s): is the board's command subject BehaviorBoard-Main.Commands?"; $failed++ }
+    $recorder = @($objects.Found | Where-Object { $_.GetType().Name -eq 'ManifestRecorder' })
+    $planField = if ($recorder.Count) { $recorder[0].GetType().GetFields([Reflection.BindingFlags]'Instance,NonPublic,Public') | Where-Object { $_.FieldType.Name -eq 'ExpectedPlan' } | Select-Object -First 1 }
+    $expected = if ($planField) { @($planField.GetValue($recorder[0]).Entries | ForEach-Object { $_.Path }) } else { @() }
+    $want = 'BehaviorBoard-Main/', 'Camera-Box/', 'BehaviorBoard-Main/BehaviorBoard-Main_device.json', 'BehaviorBoard-Main/BehaviorBoard-Main.yml', 'RigSchema/'
+    if (($expected -join ', ') -eq ($want -join ', ')) { "  ok    SessionManifest expects $($expected -join ', ')" }
+    else {
+        "  FAIL  SessionManifest expects '$($expected -join ', ')', not '$($want -join ', ')'"; $failed++
+        if ($planField) { foreach ($note in $planField.GetValue($recorder[0]).Notes) { "        its note: $note" } }
+    }
+    exit $(if ($failed) { 1 } else { 0 })
 }
 
 if ($Step -eq 'RigDevice') {
@@ -168,12 +218,13 @@ if ($Step -eq 'Checks') {
     if ($x -and $x.Message.Contains('in SubjectId or SessionId')) { "  ok    SessionKey refused a SessionId with a slash, naming the cause" } else { "  FAIL  SessionKey on a SessionId with a slash: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
     $session = Join-Path ([IO.Path]::GetTempPath()) ("hds-" + [guid]::NewGuid().ToString('N'))
     try {
-        $yml = [UclOpenCoenBehaviourBox.HarpDeviceSchema]::Write($session, 'BehaviorBoard-Main')
-        $text = if (Test-Path $yml) { [IO.File]::ReadAllText($yml) } else { '' }
-        if ($yml -eq (Join-Path $session 'BehaviorBoard-Main\BehaviorBoard-Main.yml') -and $text -match '(?m)^registers:' -and $text -match '(?m)^\s+AnalogData:' -and -not (Test-Path "$yml.tmp")) {
-            "  ok    HarpDeviceSchema wrote Harp.Behavior's register map to BehaviorBoard-Main\BehaviorBoard-Main.yml"
-        } else { "  FAIL  HarpDeviceSchema wrote '$yml' ($($text.Length) chars)"; $failed++ }
-        $json = [UclOpenCoenBehaviourBox.SessionJson]::Write($session, 'RigSchema', '{"a":1}', [datetime]::SpecifyKind([datetime]'2026-11-02T09:05:07', 'Utc'))
+        # The board's dump and register map come from RecordHarpDevices (OpenRigs.HarpDevices), from
+        # rig.yml: nothing in the workflow asks the board for its dump or names its register map itself.
+        $wf = Get-Content (Join-Path $repo 'src\main.bonsai') -Raw
+        if ($wf -match 'DumpRegisters>true</harp:DumpRegisters>\s*<harp:MuteReplies' -or $wf -match 'ext:HarpDeviceSchema' -or $wf -match '>BehaviorCommands<') {
+            "  FAIL  main.bonsai still asks for the board's dump, writes its register map, or names its commands BehaviorCommands, itself"; $failed++
+        } else { "  ok    main.bonsai leaves the board's dump and register map to RecordHarpDevices" }
+        $json =[UclOpenCoenBehaviourBox.SessionJson]::Write($session, 'RigSchema', '{"a":1}', [datetime]::SpecifyKind([datetime]'2026-11-02T09:05:07', 'Utc'))
         if ($json -eq (Join-Path $session 'RigSchema\RigSchema_2026-11-02T09-05-07.json') -and [IO.File]::ReadAllText($json) -eq '{"a":1}' -and -not (Test-Path "$json.tmp")) {
             "  ok    SessionJson wrote RigSchema\RigSchema_<DateTime>.json under the session folder it was given"
         } else { "  FAIL  SessionJson wrote '$json'"; $failed++ }

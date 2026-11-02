@@ -16,7 +16,7 @@ This creates the Python environment, regenerates the schemas and their C# classe
 
 ## Per-machine settings
 
-Nothing machine-specific is committed. The workflow reads `<ConfigRoot>\<MACHINE-NAME>\rig.yml` at startup (`ConfigRoot` defaults to `C:\Coen-Lab-Local\RigConfigs`, with the lab's other local files; rig-setup moves an older `C:\RigConfigs` there and leaves a link at the old place) and refuses to start if it is missing. `deploy.cmd` creates it from `config\rig-template.yml` the first time; fill in that machine's board port, camera serial number, exposure, gain, binning, wheel size and data path (`rootPath`) there.
+Nothing machine-specific is committed. The workflow reads `<ConfigRoot>\<MACHINE-NAME>\rig.yml` at startup (`ConfigRoot` defaults to `C:\Coen-Lab-Local\RigConfigs`, with the lab's other local files; rig-setup moves an older `C:\RigConfigs` there and leaves a link at the old place) and refuses to start if it is missing. `deploy.cmd` creates it from `config\rig-template.yml` the first time; fill in that machine's board port and the board's USB serial (`usbSerial`, from the rig's hardware scan: `K:\config\<RIG>\<RIG>_HardwareDetails.json`, `serialPorts`), camera serial number, exposure, gain, binning, wheel size and data path (`rootPath`) there.
 
 `rig.yml` is the source of truth for the hardware: each kind of device is a group of named entries, and each entry binds that name to its port or serial number. The workflow asks for the names it drives, and the name in the data is the kind and the entry joined by a hyphen:
 
@@ -24,6 +24,7 @@ Nothing machine-specific is committed. The workflow reads `<ConfigRoot>\<MACHINE
 behaviorBoard:
   main:              # BehaviorBoard-Main
     portName: COM3
+    usbSerial: AB0M7PLB
     ...
 camera:
   box:               # Camera-Box
@@ -31,7 +32,7 @@ camera:
     ...
 ```
 
-The board is found by its port and the camera by its serial number, never by the name. An entry the workflow does not ask for (a `spare:` board, say) is ignored. A name it asks for and does not find stops it at Start with the entries the file has: "rig.yml has no camera named 'box', which this workflow records as Camera-Box. Its camera entries: face. ..." (`RigDevice`, in `src\Extensions\RigDevice.cs`). A file still in the layout from before 30 Oct 2026, with the settings straight under `behaviorBoard:`, stops it at Start with "Property 'trigger0Frequency' not found on type 'UclOpenCoenBehaviourBox.BehaviorBoard'": add the `main:` and `box:` levels.
+The board is found by its port and the camera by its serial number, never by the name. The board on the port must be the one `usbSerial` names (its FTDI chip's serial, which no other board has), or the workflow stops at Start saying which board is where: "COM3 holds the board AQ03WRBO, but rig.yml behaviorBoard: main: (BehaviorBoard-Main) is the board AB0M7PLB, which is not plugged in. ..." (`Logging` > `RecordHarpDevices`, OpenRigs.HarpDevices from coen-openrigs-custom, which reads every Harp device in `rig.yml` itself). A board reporting another device type (WhoAmI) stops it too. An entry the workflow does not ask for (a `spare:` board, say) is ignored. A name it asks for and does not find stops it at Start with the entries the file has: "rig.yml has no camera named 'box', which this workflow records as Camera-Box. Its camera entries: face. ..." (`RigDevice`, in `src\Extensions\RigDevice.cs`). A file still in the layout from before 30 Oct 2026, with the settings straight under `behaviorBoard:`, stops it at Start with "Property 'trigger0Frequency' not found on type 'UclOpenCoenBehaviourBox.BehaviorBoard'": add the `main:` and `box:` levels.
 
 ## Running a session
 
@@ -50,7 +51,10 @@ Each session writes to `<rootPath>\sub-<subject>\ses-<session>_date-<date>\`, on
 - `Camera-Box\Camera-Box_<DateTime>.avi`: H.264 video of every frame received. A frame the camera drops is missing, not repeated, and the recording stops after the run length's number of received frames (30 min at 50 Hz = 90,000, across the chunks).
 - `Camera-Box\Camera-Box_<DateTime>.csv`: one row per video frame, the same columns as av-dome: the Harp time of its trigger (`Seconds`), camera `Timestamp`, `FrameID` and `ExposureTime` (the configured value). A dropped frame shows as a jump in `FrameID` and `Seconds`. Trigger messages lost between the board and the PC do not show in `FrameID`: frames pair with trigger messages in order, so from the first lost one every later row's `Seconds` is late by the number lost (seen once, 30 Oct 2026: 9 lost, every later row 0.18 s late; BACKLOG, "Lost board messages"). The sign is a step in `Seconds` other than the trigger period (20 ms at 50 Hz) where the step in `Timestamp` is one period; `Timestamp` is the camera's own clock, so `Seconds` can be rebuilt from the rows before the first such step.
 - `BehaviorBoard-Main\BehaviorBoard-Main_<address>_<DateTime>.bin`: every Harp event and write from the board, one file per register, logged with `OpenRigs.Logging:LogHarpDevice` (the same logger as ucl-open main). The running wheel's raw encoder position is in `BehaviorBoard-Main_44_*` (`AnalogData`, `Encoder`) at the board's full rate, about 1 kHz.
-- `BehaviorBoard-Main\BehaviorBoard-Main_<DateTime>.bin`: the board's register dump, requested when logging begins, so its settings for the session are on record. (av-dome's current logger, `UclOpen.Logging` from May 2026, keeps only the first reply of each second: ucl-open/av-dome#33.)
+- `BehaviorBoard-Main\BehaviorBoard-Main_<address>_<DateTime>.bin` also holds the board's register dump, which `RecordHarpDevices` asks for 0.5 s after the session folder appears, so its settings for the session are on record. (av-dome's current logger, `UclOpen.Logging` from May 2026, keeps only the first reply of each second: ucl-open/av-dome#33.)
+- `BehaviorBoard-Main\BehaviorBoard-Main_device.json`: which board it was: its port, USB serial, WhoAmI, hardware, firmware and core versions and Harp serial, from that dump (`RecordHarpDevices`).
+- `BehaviorBoard-Main\BehaviorBoard-Main.yml`: the board's register map, Harp.Behavior's `device.yml`, so the `.bin` files can be decoded from the session alone.
+- `RigSchema\RigSchema_<DateTime>.json`: `rig.yml` as parsed.
 
 Sessions before 30 Oct 2026 have `Cameras\VideoData_Camera1.avi` and `.csv`, one file per run, and `BehaviorBoard\BehaviorBoard_*`. Before the clock was set (30 Oct 2026), the board counted from power-on, so file names read `1904-01-...` and Harp times are uptime, not UTC.
 
@@ -67,7 +71,7 @@ Every session folder gets a `manifest.json` (`Logging` > `SessionManifest`, the 
 - the settings at Go from the session controller (`SubjectId`, `SessionId`, `RunLengthMins`);
 - `rig.yml` as read at Start, with its sha256;
 - how the run ended: `completed` when the run length's frames were written, `error` with a Watchdog's message, `stopped` after a controller stop (with its reason), `ended-early` when the workflow stopped any other way;
-- `expected`: a folder for each device in `rig.yml` this workflow publishes (`BehaviorBoard-Main/`, `Camera-Box/`), with how many files each holds;
+- `expected`: a folder for each device in `rig.yml` this workflow publishes (`BehaviorBoard-Main/`, `Camera-Box/`), each Harp device's `_device.json` and `.yml` (`harp`), and `RigSchema/`, with how many files each holds;
 - every file in the folder with its size. Its `status` is `partial`: the overnight copy (rig-setup's `rig-sync.ps1`) checks every listed file is present and closed, adds sizes and hashes, writes `complete`, and only then copies the session to the server, the manifest last. A listed file that is missing, or an expected folder holding nothing (a board that never logged), stops that session's copy and raises an alarm on the rig's health report. `ingest_script` is `coen-behaviour-box`, the name the server's ingest registry runs for this data. Errors on the board's logging chain do not reach the node, so a session whose board log failed reads `ended-early`, not `error`; its empty `BehaviorBoard-Main/` is what says so.
 
 ## Live view

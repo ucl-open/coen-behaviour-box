@@ -19,7 +19,9 @@ HEADER = """\
 # Each device sits under its kind by name: the workflow drives behaviorBoard: main:
 # (BehaviorBoard-Main in the data) and camera: box: (Camera-Box), and stops at startup if either
 # is missing. The frame rate is behaviorBoard.main.cameraTriggerController.trigger0Frequency;
-# camera.box.triggerFrequency and trigger1Frequency are not used by this rig.
+# camera.box.triggerFrequency and trigger1Frequency are not used by this rig. usbSerial is the
+# board's USB serial, as the rig's hardware scan lists it for portName: the workflow stops at
+# Start if the board on portName has another.
 """
 
 # Placeholder values only: they must look wrong until a rig fills them in. The trigger rate,
@@ -30,6 +32,7 @@ rig = UclOpenCoenBehaviourBoxRig(
     behavior_board={
         "main": BehaviorBoard(
             port_name="COM-CHANGE-ME",
+            usb_serial="CHANGE-ME",
             camera_trigger_controller=CameraTriggerController(trigger0_frequency=50, trigger1_frequency=50),
             running_wheel=RunningWheel(counts_per_rev=4096, wheel_diameter_mm=150),
         )

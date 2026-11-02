@@ -22,6 +22,9 @@ class LiveView(BaseSchema):
 # keep open_rigs' names, so the generated C# classes keep theirs.
 class BehaviorBoard(_BehaviorBoard):
     __doc__ = _BehaviorBoard.__doc__
+    usb_serial: str = Field(
+        description="The board's USB serial number, its FTDI chip's (AB0M7PLB): which board this is. OpenRigs.HarpDevices stops the workflow at Start if the board on portName has another. The rig's hardware scan lists each port's (serialPorts, usbSerial)."
+    )
     live_view: Optional[LiveView] = Field(default=None, description="Live view settings for this board (OpenRigs.LiveView).")
 
 

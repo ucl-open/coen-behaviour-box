@@ -6,7 +6,9 @@
 # Each device sits under its kind by name: the workflow drives behaviorBoard: main:
 # (BehaviorBoard-Main in the data) and camera: box: (Camera-Box), and stops at startup if either
 # is missing. The frame rate is behaviorBoard.main.cameraTriggerController.trigger0Frequency;
-# camera.box.triggerFrequency and trigger1Frequency are not used by this rig.
+# camera.box.triggerFrequency and trigger1Frequency are not used by this rig. usbSerial is the
+# board's USB serial, as the rig's hardware scan lists it for portName: the workflow stops at
+# Start if the board on portName has another.
 behaviorBoard:
   main:
     cameraTriggerController:
@@ -18,6 +20,7 @@ behaviorBoard:
     runningWheel:
       countsPerRev: 4096
       wheelDiameterMm: 150.0
+    usbSerial: CHANGE-ME
 camera:
   box:
     binning: 1
