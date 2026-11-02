@@ -275,10 +275,10 @@ if ($Step -eq 'Checks') {
     if (-not $x) { "  ok    Watchdog passed a value that came in time" } else { "  FAIL  Watchdog refused a value in time: $($x.Message)"; $failed++ }
     # CameraOverrides: a refusal reads as one message, with no "Parameter name" line.
     $over = New-Object UclOpenCoenBehaviourBox.CameraOverrides
-    $over.ExposureTime = -1
+    $over.Binning = 0
     $camera = New-Object 'UclOpenCoenBehaviourBox.NamedDevice[UclOpenCoenBehaviourBox.SpinnakerCamera]' 'Camera-Box', (New-Object UclOpenCoenBehaviourBox.SpinnakerCamera)
     $x = Get-Refusal { $null = Invoke-Process $over $null ($return.MakeGenericMethod($camera.GetType()).Invoke($null, @(, $camera.PSObject.BaseObject))) }
-    if ($x -and $x.Message.Contains('must be above 0') -and -not $x.Message.Contains('Parameter name')) { "  ok    CameraOverrides refused ExposureTime -1 in one message" } else { "  FAIL  CameraOverrides on ExposureTime -1: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
+    if ($x -and $x.Message.Contains('must be 1 or more') -and -not $x.Message.Contains('Parameter name')) { "  ok    CameraOverrides refused Binning 0 in one message" } else { "  FAIL  CameraOverrides on Binning 0: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
     $text = [IO.File]::ReadAllText((Join-Path $repo 'src\main.bonsai'))
     # Every timeout in the workflow says what did not arrive: Watchdog with a message, never a bare Timeout.
     $dogs = [regex]::Matches($text, 'xsi:type="ext:Watchdog">\s*<ext:DueTime>[^<]+</ext:DueTime>\s*<ext:Message>[^<]+</ext:Message>').Count

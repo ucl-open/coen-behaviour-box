@@ -25,13 +25,11 @@
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="ConfigRoot" />
-        <Property Name="ExposureTime" DisplayName="ExposureTime" Description="Camera exposure in microseconds, in place of rig.yml's; at most the trigger period less 1,000 (19,000 at 50 Hz), or the workflow stops at Start. Stays set for later runs until cleared. Blank: rig.yml's camera exposureTime." />
-        <Property Name="Gain" DisplayName="Gain" Description="Camera gain in dB, in place of rig.yml's; not recorded in the session. Stays set for later runs until cleared. Blank: rig.yml's camera gain." />
         <Property Name="Binning" DisplayName="Binning" Description="Camera binning, 1 for full resolution, in place of rig.yml's. Stays set for later runs until cleared. Blank: rig.yml's camera binning." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>RigConfig</Name>
-        <Description>Reads &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml once, into the RigConfig subject, then takes out the two devices this workflow drives by name, each into a subject of that name: BehaviorBoard-Main (behaviorBoard: main:) and Camera-Box (camera: box:). Each subject holds the device's Name and its Settings from rig.yml; the name is typed once, in RigDevice, and the device's files take theirs from the subject's Name, so the entry read and the files written cannot disagree. A second camera is another RigDevice and subject, such as Camera-Face. rig.yml is where each name is bound to its hardware (port, serial number); the name is what the data is called. Fails at startup if the machine has no directory or file, or if rig.yml has no entry by either name, saying which entries it has; other entries are ignored. The camera's ExposureTime, Gain and Binning can be set for one run from this workflow's properties (CameraOverrides); blank keeps rig.yml's, and Camera-Box carries the values in use, so the camera and the CSV's ExposureTime column agree. ExposureFitsTrigger then stops the workflow at Start if the exposure in use, plus 1000 us for the camera, is longer than the board's Trigger0 period (19,000 us at 50 Hz): the camera would skip triggers and every frame would get the wrong time.</Description>
+        <Description>Reads &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml once, into the RigConfig subject, then takes out the two devices this workflow drives by name, each into a subject of that name: BehaviorBoard-Main (behaviorBoard: main:) and Camera-Box (camera: box:). Each subject holds the device's Name and its Settings from rig.yml; the name is typed once, in RigDevice, and the device's files take theirs from the subject's Name, so the entry read and the files written cannot disagree. A second camera is another RigDevice and subject, such as Camera-Face. rig.yml is where each name is bound to its hardware (port, serial number); the name is what the data is called. Fails at startup if the machine has no directory or file, or if rig.yml has no entry by either name, saying which entries it has; other entries are ignored. The camera's Binning can be set for one run from this workflow's properties (CameraOverrides); blank keeps rig.yml's. Its ExposureTime and Gain start at rig.yml's and are session parameters, changed live while ready (Hardware &gt; Camera). ExposureFitsTrigger then stops the workflow at Start if rig.yml's exposure, plus 1000 us for the camera, is longer than the board's Trigger0 period (19,000 us at 50 Hz): the camera would skip triggers and every frame would get the wrong time.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -79,14 +77,10 @@
               <Name>Camera-Box</Name>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="ExposureTime" />
-              <Property Name="Gain" />
               <Property Name="Binning" />
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="ext:CameraOverrides">
-                <ext:ExposureTime xsi:nil="true" />
-                <ext:Gain xsi:nil="true" />
                 <ext:Binning xsi:nil="true" />
               </Combinator>
             </Expression>
@@ -129,7 +123,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Initialization</Name>
-        <Description>The session controller (OpenRigs.Control, SessionControl): SubjectId and SessionId from this node's properties or the command line (--property:SubjectId=...), the run length (whole minutes) as a parameter the controller may change until Go, and the control endpoint the rig agent talks to (TCP 5561). The workflow starts into ready mode: board connected, camera armed and streaming, nothing recorded, waiting for Go. At Go the IDs and the run length are checked once and published as RunSettings, which logging waits for; if an ID is empty or the run length is not 1 to 9999, the workflow stops with "Sequence contains no elements." and nothing is recorded. Stop from the controller ends the workflow through SessionStoppedException, closing every file.</Description>
+        <Description>The session controller (OpenRigs.Control, SessionControl): SubjectId and SessionId from this node's properties or the command line (--property:SubjectId=...), the run length (whole minutes) and the camera's ExposureTime and Gain (taken live by the camera, Hardware &gt; Camera) as parameters the controller may change until Go, and the control endpoint the rig agent talks to (TCP 5561). The workflow starts into ready mode: board connected, camera armed and streaming, nothing recorded, waiting for Go. At Go the IDs and the run length are checked once and published as RunSettings, which logging waits for; if an ID is empty or the run length is not 1 to 9999, the workflow stops with "Sequence contains no elements." and nothing is recorded. Stop from the controller ends the workflow through SessionStoppedException, closing every file.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -148,6 +142,18 @@
                   <Minimum>1</Minimum>
                   <Maximum>9999</Maximum>
                   <WholeNumber>true</WholeNumber>
+                </Parameter>
+                <Parameter>
+                  <Name>ExposureTime</Name>
+                  <Value />
+                  <Description>Camera exposure in microseconds, taken by the camera live until Go. Starts at rig.yml's; at most the trigger period less 1,000 (19,000 at 50 Hz).</Description>
+                  <Minimum>100</Minimum>
+                </Parameter>
+                <Parameter>
+                  <Name>Gain</Name>
+                  <Value />
+                  <Description>Camera gain in dB, taken by the camera live until Go. Starts at rig.yml's.</Description>
+                  <Minimum>0</Minimum>
                 </Parameter>
               </Parameters>
               <Commands />
@@ -411,7 +417,7 @@
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>Camera</Name>
-              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Subscribed once rig.yml is read (RigConfig), at Start and before Go, so the preview streams in ready mode; the first frame reports Ready to the controller. Watchdog stops the workflow with a message of its own if no frame arrives for 15 s (usually the trigger cable). The frames are published as Camera-Box.Data, which the live view streams; the last two nodes take 5 images a second from them for the editor's preview window (config\main.layout), from Start, so it shows the camera in ready mode.</Description>
+              <Description>Frames paired with Harp trigger times. Triggers are Event messages only: the CameraTriggerController subject also carries the register-dump Read reply, which is not a trigger. OpenRigs.Video TriggeredSpinnaker, given the triggers, copies FrameID and Timestamp inside the camera callback, fills FrameID gaps and then pairs frames with triggers, so a dropped frame does not shift later times. Subscribed once rig.yml is read (RigConfig), at Start and before Go, so the preview streams in ready mode; the first frame reports Ready to the controller. Watchdog stops the workflow with a message of its own if no frame arrives for 15 s (usually the trigger cable). The frames are published as Camera-Box.Data, which the live view streams; the last two nodes take 5 images a second from them for the editor's preview window (config\main.layout), from Start, so it shows the camera in ready mode. ExposureTime and Gain are session parameters: each starts at Camera-Box's (rig.yml's) value and takes each value the controller sets (OnParameterSet) straight to the open camera, so the preview shows the change while ready; Go fixes them. One second after Start, once the controller's server is up, ParameterDefault shows rig.yml's values as the parameters' values, and ParameterMaximum limits a set exposure to the trigger period less 1000 us, so a longer one is refused at the controller instead of stopping the workflow. Binning is taken only when the camera opens.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="SubscribeSubject">
@@ -420,8 +426,6 @@
                   <Expression xsi:type="PropertyMapping">
                     <PropertyMappings>
                       <Property Name="SerialNumber" Selector="Settings.SerialNumber" />
-                      <Property Name="ExposureTime" Selector="Settings.ExposureTime" />
-                      <Property Name="Gain" Selector="Settings.Gain" />
                       <Property Name="Binning" Selector="Settings.Binning" />
                     </PropertyMappings>
                   </Expression>
@@ -483,6 +487,96 @@
                       <rx:Interval>PT0.2S</rx:Interval>
                     </Combinator>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Camera-Box</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Settings.ExposureTime</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>ControlEvents</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="orcl:OnParameterSet">
+                      <orcl:Name>ExposureTime</orcl:Name>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Expression>Convert.ToDouble(it)</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Merge" />
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="ExposureTime" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Camera-Box</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Settings.Gain</Selector>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>ControlEvents</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="orcl:OnParameterSet">
+                      <orcl:Name>Gain</orcl:Name>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Expression>Convert.ToDouble(it)</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Merge" />
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="Gain" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Camera-Box</Name>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>BehaviorBoard-Main</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Zip" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:DelaySubscription">
+                      <rx:DueTime>PT1S</rx:DueTime>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Item1.Settings.ExposureTime</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="orcl:ParameterDefault">
+                      <orcl:Name>ExposureTime</orcl:Name>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Item1.Settings.Gain</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="orcl:ParameterDefault">
+                      <orcl:Name>Gain</orcl:Name>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Name>ExposureLimit</scr:Name>
+                    <scr:Description>The longest exposure that fits the trigger period, less ExposureFitsTrigger's 1000 us margin.</scr:Description>
+                    <scr:Expression>1000000.0 / Item2.Settings.CameraTriggerController.Trigger0Frequency - 1000.0</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="orcl:ParameterMaximum">
+                      <orcl:Name>ExposureTime</orcl:Name>
+                    </Combinator>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
@@ -498,6 +592,29 @@
                   <Edge From="11" To="12" Label="Source1" />
                   <Edge From="9" To="13" Label="Source1" />
                   <Edge From="13" To="14" Label="Source1" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="16" To="20" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="18" To="19" Label="Source1" />
+                  <Edge From="19" To="20" Label="Source2" />
+                  <Edge From="20" To="21" Label="Source1" />
+                  <Edge From="21" To="5" Label="Source3" />
+                  <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="23" To="27" Label="Source1" />
+                  <Edge From="24" To="25" Label="Source1" />
+                  <Edge From="25" To="26" Label="Source1" />
+                  <Edge From="26" To="27" Label="Source2" />
+                  <Edge From="27" To="28" Label="Source1" />
+                  <Edge From="28" To="5" Label="Source4" />
+                  <Edge From="29" To="31" Label="Source1" />
+                  <Edge From="30" To="31" Label="Source2" />
+                  <Edge From="31" To="32" Label="Source1" />
+                  <Edge From="32" To="33" Label="Source1" />
+                  <Edge From="33" To="34" Label="Source1" />
+                  <Edge From="32" To="35" Label="Source1" />
+                  <Edge From="35" To="36" Label="Source1" />
+                  <Edge From="32" To="37" Label="Source1" />
+                  <Edge From="37" To="38" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -547,7 +664,7 @@
             </Expression>
             <Expression xsi:type="GroupWorkflow">
               <Name>RecordVideo</Name>
-              <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records the run length's worth of frames (RunLengthToFrames), split into one-hour chunks on the frames' Harp time (GroupByTime, as the board's log is), each chunk to &lt;Name&gt;\&lt;Name&gt;_&lt;DateTime&gt;.avi and .csv, Name being the camera's from its subject (Camera-Box), named by OpenRigs.Logging's FormatFileName after the chunk's start as the board's files are. CSV columns, as av-dome writes for its cameras: Seconds (Harp time of the frame's trigger), Timestamp and FrameID (camera), ExposureTime. A run crossing the hour gives two pairs; one ffmpeg closes and the next opens there. The video is H.264 through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, which av-dome and LogVideo use, fell behind on the N150 and crashed long sessions). ExposureTime is the configured value, because OpenRigs.Video's frame does not carry the camera's. Wait for ffmpeg.exe to exit before closing Bonsai. SampleInterval here samples the recorded frames, 5 a second; the editor's preview window (config\main.layout) is on Hardware &gt; Camera's last node instead, which takes every camera frame from Start, so it shows the camera in ready mode.</Description>
+              <Description>Subscribed only once PathPrefix exists: Take reads its Count, and the writers may read FileName, at subscription. Records the run length's worth of frames (RunLengthToFrames), split into one-hour chunks on the frames' Harp time (GroupByTime, as the board's log is), each chunk to &lt;Name&gt;\&lt;Name&gt;_&lt;DateTime&gt;.avi and .csv, Name being the camera's from its subject (Camera-Box), named by OpenRigs.Logging's FormatFileName after the chunk's start as the board's files are. CSV columns, as av-dome writes for its cameras: Seconds (Harp time of the frame's trigger), Timestamp and FrameID (camera), ExposureTime. A run crossing the hour gives two pairs; one ffmpeg closes and the next opens there. The video is H.264 through FFmpeg on Intel Quick Sync (Bonsai.Vision's VideoWriter, which av-dome and LogVideo use, fell behind on the N150 and crashed long sessions). ExposureTime is the ExposureTime parameter at Go (rig.yml's unless the controller changed it while ready; fixed from Go), because OpenRigs.Video's frame does not carry the camera's. Wait for ffmpeg.exe to exit before closing Bonsai. SampleInterval here samples the recorded frames, 5 a second; the editor's preview window (config\main.layout) is on Hardware &gt; Camera's last node instead, which takes every camera frame from Start, so it shows the camera in ready mode.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -662,10 +779,12 @@
                           <Combinator xsi:type="rx:Zip" />
                         </Expression>
                         <Expression xsi:type="SubscribeSubject">
-                          <Name>Camera-Box</Name>
+                          <Name>SessionGo</Name>
                         </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>Settings.ExposureTime</Selector>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="orcl:ParameterValue">
+                            <orcl:Name>ExposureTime</orcl:Name>
+                          </Combinator>
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="rx:WithLatestFrom" />

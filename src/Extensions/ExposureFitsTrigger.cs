@@ -11,8 +11,8 @@ namespace UclOpenCoenBehaviourBox
     /// that trigger, so it runs at a fraction of the trigger rate with no gap in its FrameID, and
     /// every frame is then paired with the wrong trigger time: on GEEK-BBOX1, 30,000 us at 50 Hz
     /// gave 25 frames a second and Seconds 60 s adrift of the camera's clock after 3000 rows, with
-    /// no error (30 Oct 2026). Checks the settings in use, after CameraOverrides, so a value from
-    /// rig.yml is caught as well as one typed for a run.
+    /// no error (30 Oct 2026). Checks rig.yml's exposure, the camera's start value; an exposure
+    /// set while ready is refused at the controller by ParameterMaximum, on the same limit.
     /// </summary>
     [Combinator]
     [WorkflowElementCategory(ElementCategory.Transform)]
@@ -59,7 +59,7 @@ namespace UclOpenCoenBehaviourBox
                 throw new InvalidOperationException(string.Format(
                     "{0}'s ExposureTime is {1} us, longer than {2} us, the most that fits its {3} Hz trigger " +
                     "(a period of {4} us, less {5} us for the camera). The camera would skip triggers and every " +
-                    "frame would get the wrong time. Set ExposureTime (or rig.yml's exposureTime) to {2} or less.",
+                    "frame would get the wrong time. Set rig.yml's exposureTime to {2} or less.",
                     camera, exposureTime, limit, frequency, 1e6 / frequency, margin));
             }
         }
