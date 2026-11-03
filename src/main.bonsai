@@ -24,6 +24,7 @@
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
+        <Property Name="ConfigRoot" />
         <Property Name="Binning" DisplayName="Binning" Description="Camera binning, 1 for full resolution, in place of rig.yml's. Stays set for later runs until cleared. Blank: rig.yml's camera binning." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
@@ -1040,9 +1041,6 @@
                 <ext:Formatting>Indented</ext:Formatting>
               </Combinator>
             </Expression>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="ConfigRoot" />
-            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="2" Label="Source1" />
@@ -1071,27 +1069,20 @@
             <Edge From="31" To="29" Label="Source1" />
             <Edge From="28" To="29" Label="Source2" />
             <Edge From="29" To="30" Label="Source1" />
-            <Edge From="32" To="16" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
       <Expression xsi:type="lv:StreamDevices">
         <Name>LiveView</Name>
-        <Description>Streams every device in this machine's rig.yml that the workflow publishes, over ZeroMQ, for the live view (OpenRigs.LiveView, StreamDevices): data on TCP 5556, video on 5558, on every interface, from Start (in ready mode too). Camera-Box.Data as Camera-Box.video, 5 JPEG frames a second at 320 x 240; BehaviorBoard-Main.Data as BehaviorBoard-Main.encoder, the raw count from AnalogData, 10 a second; each rate and size can be changed in rig.yml under the device's liveView:. Also elapsed, seconds since the session folder (PathPrefix) appeared, once a second, and every 5 s liveview: this workflow, its commit, and the devices streamed and skipped and why. Every message carries RigId, the machine's name, and the session key: "ready" until the session folder exists, then its name, sub-&lt;SubjectId&gt;/ses-&lt;SessionId&gt;_&lt;start&gt;. Its ConfigRoot is the workflow's, as RigConfig's and RecordHarpDevices' are, so --property:ConfigRoot moves all three. Last in the workflow, because it streams only subjects built before it. A port already in use (another workflow streaming) stops the workflow at Start with NetMQ's AddressAlreadyInUseException, before the camera is triggered.</Description>
+        <Description>Streams every device in this machine's rig.yml that the workflow publishes, over ZeroMQ, for the live view (OpenRigs.LiveView, StreamDevices): data on TCP 5556, video on 5558, on every interface, from Start (in ready mode too). Camera-Box.Data as Camera-Box.video, 5 JPEG frames a second at 320 x 240; BehaviorBoard-Main.Data as BehaviorBoard-Main.encoder, the raw count from AnalogData, 10 a second; each rate and size can be changed in rig.yml under the device's liveView:. Also elapsed, seconds since the session folder (PathPrefix) appeared, once a second, and every 5 s liveview: this workflow, its commit, and the devices streamed and skipped and why. Every message carries RigId, the machine's name, and the session key: "ready" until the session folder exists, then its name, sub-&lt;SubjectId&gt;/ses-&lt;SessionId&gt;_&lt;start&gt;. Its ConfigRoot is its own, the same folder as the workflow's: Bonsai cannot pass a workflow property into it, so a rig using another ConfigRoot changes it here too, and --property:ConfigRoot reaches RigConfig only. Last in the workflow, because it streams only subjects built before it. A port already in use (another workflow streaming) stops the workflow at Start with NetMQ's AddressAlreadyInUseException, before the camera is triggered.</Description>
         <lv:ConfigRoot>C:\Coen-Lab-Local\RigConfigs</lv:ConfigRoot>
         <lv:DataPort>5556</lv:DataPort>
         <lv:VideoPort>5558</lv:VideoPort>
-      </Expression>
-      <Expression xsi:type="ExternalizedMapping">
-        <Property Name="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml, read by RigConfig, RecordHarpDevices and LiveView. SessionManifest's ConfigFiles names rig.yml's own path and does not follow it; the manifest notes when the two disagree." />
       </Expression>
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
       <Edge From="2" To="3" Label="Source1" />
-      <Edge From="7" To="1" Label="Source2" />
-      <Edge From="7" To="5" Label="Source1" />
-      <Edge From="7" To="6" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>

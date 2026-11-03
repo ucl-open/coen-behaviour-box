@@ -85,23 +85,15 @@ if ($Step -eq 'Build') {
     $rootsOk = $roots.Count -ge 4 -and $distinct.Count -eq 1
     if ($rootsOk) { "  ok    every node reads rig.yml under the same root, $($distinct[0]) ($($roots.Count) nodes)" }
     else { "  FAIL  the nodes' rig.yml roots differ, or fewer than 4 were found: $($roots -join '; ')" }
-    # ConfigRoot set as Bonsai's launcher sets --property:ConfigRoot: one workflow property, mapped
-    # to every node that reads rig.yml by root (RigConfig, RecordHarpDevices, LiveView; HarpDevices
-    # 0.1.0-local.5 and LiveView local.8 let it, 3 Nov 2026), so a node it misses reads the
-    # machine's own rig.yml and fails here. SessionManifest's ConfigFiles names rig.yml's own path
-    # and is set by hand.
-    [Bonsai.Expressions.ExpressionBuilderGraphExtensions]::SetWorkflowProperty($wb.Workflow, 'ConfigRoot', (Join-Path $bin 'config'))
-    $stayed = @(Get-ConfigRoots $wb.Workflow | Where-Object { $_ -notlike 'SessionManifest.*' -and ($_ -split '=', 2)[1] -ne (Join-Path $bin 'config') })
-    if ($stayed.Count) { "  FAIL  --property:ConfigRoot did not reach $($stayed -join '; ')"; $rootsOk = $false }
-    else { "  ok    --property:ConfigRoot reaches every node that reads rig.yml by root" }
-    function Set-ConfigFiles($graph) {
+    function Set-ConfigRoot($graph) {
         foreach ($n in $graph) {
             $b = [Bonsai.Expressions.ExpressionBuilder]::Unwrap($n.Value)
+            if ($b.GetType().Namespace -like 'OpenRigs.*' -and $b.PSObject.Properties['ConfigRoot']) { $b.ConfigRoot = Join-Path $bin 'config' }
             if ($b.GetType().Name -eq 'SessionManifest') { $b.ConfigFiles = $rigYml }
-            if ($b -is [Bonsai.Expressions.IWorkflowExpressionBuilder] -and $b.Workflow) { Set-ConfigFiles $b.Workflow }
+            if ($b -is [Bonsai.Expressions.IWorkflowExpressionBuilder] -and $b.Workflow) { Set-ConfigRoot $b.Workflow }
         }
     }
-    Set-ConfigFiles $wb.Workflow
+    Set-ConfigRoot $wb.Workflow
     try {
         $built = [Bonsai.Expressions.ExpressionBuilderGraphExtensions]::Build($wb.Workflow)
     } catch {
