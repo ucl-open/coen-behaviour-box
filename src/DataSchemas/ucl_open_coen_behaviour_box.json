@@ -92,12 +92,6 @@
             "null"
           ]
         },
-        "version": {
-          "const": "0.1.0",
-          "default": "0.1.0",
-          "title": "Version",
-          "type": "string"
-        },
         "behaviorBoard": {
           "additionalProperties": {
             "$ref": "#/$defs/BehaviorBoard"

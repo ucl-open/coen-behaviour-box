@@ -205,15 +205,12 @@ namespace UclOpenCoenBehaviourBox
     
         private string _rigId;
     
-        private string _version;
-    
         private System.Collections.Generic.Dictionary<string, BehaviorBoard> _behaviorBoard;
     
         private System.Collections.Generic.Dictionary<string, SpinnakerCamera> _camera;
     
         public BehaviourBoxRig()
         {
-            _version = "0.1.0";
             _behaviorBoard = new System.Collections.Generic.Dictionary<string, BehaviorBoard>();
             _camera = new System.Collections.Generic.Dictionary<string, SpinnakerCamera>();
         }
@@ -222,7 +219,6 @@ namespace UclOpenCoenBehaviourBox
         {
             _rootPath = other._rootPath;
             _rigId = other._rigId;
-            _version = other._version;
             _behaviorBoard = other._behaviorBoard;
             _camera = other._camera;
         }
@@ -262,20 +258,6 @@ namespace UclOpenCoenBehaviourBox
             set
             {
                 _rigId = value;
-            }
-        }
-    
-        [Newtonsoft.Json.JsonPropertyAttribute("version")]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="version")]
-        public string Version
-        {
-            get
-            {
-                return _version;
-            }
-            set
-            {
-                _version = value;
             }
         }
     
@@ -333,7 +315,6 @@ namespace UclOpenCoenBehaviourBox
         {
             stringBuilder.Append("RootPath = " + _rootPath + ", ");
             stringBuilder.Append("RigId = " + _rigId + ", ");
-            stringBuilder.Append("Version = " + _version + ", ");
             stringBuilder.Append("BehaviorBoard = " + _behaviorBoard + ", ");
             stringBuilder.Append("Camera = " + _camera);
             return true;
