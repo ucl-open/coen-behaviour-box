@@ -346,7 +346,7 @@
                   </Expression>
                   <Expression xsi:type="GroupWorkflow">
                     <Name>Clock</Name>
-                    <Description>Sets the board's clock to the PC's UTC time (SynchronizeTimestamp, whole seconds) as soon as the board sends its first message, and publishes the board's reply as BoardClockSet. Without it the board counts from power-on, and Harp timestamps, the CSV Seconds column and every file name follow that count (1904-01-04T17-00-00 and so on). The board's own open-time register dump comes before this write and is not logged; Logging waits for BoardClockSet before it logs the board; the dump it keeps is asked for by Logging &gt; RecordHarpDevices, 0.5 s after PathPrefix names the session folder, after Go. If the board's reply has not come 10 s after Start, Watchdog stops the workflow with a message saying so, rather than record a whole session with no board files; triggers start 5 s after Start, so the session folder then holds a few seconds of video and CSV and no board files. (4 s stopped every run: Watchdog's time counts from the workflow's subscription, before the config and camera are up. In 35 sessions on 30 Oct 2026 the board's log began about 3.9 s before the first trigger, so the clock is set well before any frame.)</Description>
+                    <Description>Sets the board's clock to the PC's UTC time (SynchronizeTimestamp, whole seconds) as soon as the board sends its first message, and publishes BoardClockSet once a TimestampSeconds message from the board (its once-a-second heartbeat, or the write's reply) carries a time within 2 s of the PC's UTC time (BoardClockAgrees). Until then each heartbeat that disagrees sends the write again. BoardClockSet does not rely on catching the write's reply: Bonsai subscribes a workflow's branches one after another while the board is already talking, and the branch waiting for the reply could subscribe after it had come (2 Nov 2026: about 1 start in 4 stopped on this Watchdog that way). Without the clock the board counts from power-on, and Harp timestamps, the CSV Seconds column and every file name follow that count (1904-01-04T17-00-00 and so on). The board's own open-time register dump comes before this write and is not logged; Logging waits for BoardClockSet before it logs the board; the dump it keeps is asked for by Logging &gt; RecordHarpDevices, 0.5 s after PathPrefix names the session folder, after Go. If the board's clock does not agree 10 s after Start, Watchdog stops the workflow with a message saying so, rather than record a whole session with no board files; triggers start 5 s after Start, so the session folder then holds a few seconds of video and CSV and no board files. (4 s stopped every run: Watchdog's time counts from the workflow's subscription, before the config and camera are up.)</Description>
                     <Workflow>
                       <Nodes>
                         <Expression xsi:type="SubscribeSubject">
@@ -372,8 +372,8 @@
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="harp:FilterMessageType">
-                            <harp:FilterType>Include</harp:FilterType>
-                            <harp:MessageType>Write</harp:MessageType>
+                            <harp:FilterType>Exclude</harp:FilterType>
+                            <harp:MessageType>Read</harp:MessageType>
                           </Combinator>
                         </Expression>
                         <Expression xsi:type="Combinator">
@@ -390,6 +390,43 @@
                             <ext:Message>The board did not confirm within 10 s of Start that its clock was set, so nothing from the board is logged. Either its messages are not reaching the PC or the board is not responding. Check the board's USB cable and power (switch it off and on if it is powered), then Start again. The session folder holds a few seconds of video and CSV and no board files.</ext:Message>
                           </Combinator>
                         </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="ext:BoardClockAgrees">
+                            <ext:Agrees>true</ext:Agrees>
+                            <ext:ToleranceSeconds>2</ext:ToleranceSeconds>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>BehaviorBoard-Main.Data</Name>
+                        </Expression>
+                        <Expression xsi:type="harp:FilterRegister">
+                          <harp:FilterType>Include</harp:FilterType>
+                          <harp:Register xsi:type="harp:TimestampSeconds" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="harp:FilterMessageType">
+                            <harp:FilterType>Include</harp:FilterType>
+                            <harp:MessageType>Event</harp:MessageType>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="ext:BoardClockAgrees">
+                            <ext:Agrees>false</ext:Agrees>
+                            <ext:ToleranceSeconds>2</ext:ToleranceSeconds>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>BoardClockSet</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:TakeUntil" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="harp:SynchronizeTimestamp" />
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>BehaviorBoard-Main.Commands</Name>
+                        </Expression>
                       </Nodes>
                       <Edges>
                         <Edge From="0" To="1" Label="Source1" />
@@ -397,9 +434,17 @@
                         <Edge From="2" To="3" Label="Source1" />
                         <Edge From="4" To="5" Label="Source1" />
                         <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="9" Label="Source1" />
+                        <Edge From="6" To="10" Label="Source1" />
+                        <Edge From="10" To="9" Label="Source1" />
                         <Edge From="9" To="7" Label="Source1" />
                         <Edge From="7" To="8" Label="Source1" />
+                        <Edge From="11" To="12" Label="Source1" />
+                        <Edge From="12" To="13" Label="Source1" />
+                        <Edge From="13" To="14" Label="Source1" />
+                        <Edge From="14" To="16" Label="Source1" />
+                        <Edge From="15" To="16" Label="Source2" />
+                        <Edge From="16" To="17" Label="Source1" />
+                        <Edge From="17" To="18" Label="Source1" />
                       </Edges>
                     </Workflow>
                   </Expression>
