@@ -178,7 +178,7 @@ wheels = [
 [[package]]
 name = "open-rigs"
 version = "0.0.0"
-source = { git = "https://github.com/Coen-Lab/lib-open-rigs?rev=bf909c8bc8817931b65af51762af8cf2ee4c3240#bf909c8bc8817931b65af51762af8cf2ee4c3240" }
+source = { git = "https://github.com/Coen-Lab/lib-open-rigs?rev=7b020572df04b4c6bd42e85909170ad56e87eded#7b020572df04b4c6bd42e85909170ad56e87eded" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-yaml" },
@@ -444,7 +444,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "open-rigs", git = "https://github.com/Coen-Lab/lib-open-rigs?rev=bf909c8bc8817931b65af51762af8cf2ee4c3240" },
+    { name = "open-rigs", git = "https://github.com/Coen-Lab/lib-open-rigs?rev=7b020572df04b4c6bd42e85909170ad56e87eded" },
     { name = "pydantic-settings" },
     { name = "swc-aeon", git = "https://github.com/SainsburyWellcomeCentre/aeon_api.git?branch=main" },
 ]
