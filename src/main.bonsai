@@ -152,8 +152,9 @@
                 <Parameter>
                   <Name>Gain</Name>
                   <Value />
-                  <Description>Camera gain in dB, taken by the camera live until Go. Starts at rig.yml's.</Description>
+                  <Description>Camera gain in dB, 0 to 5, taken by the camera live until Go. Starts at rig.yml's.</Description>
                   <Minimum>0</Minimum>
+                  <Maximum>5</Maximum>
                 </Parameter>
               </Parameters>
               <Commands />
