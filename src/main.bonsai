@@ -44,7 +44,7 @@
               <FileName>rig.yml</FileName>
             </Expression>
             <Expression xsi:type="ext:DeserializeFromYaml">
-              <ext:Type xsi:type="TypeMapping" TypeArguments="ext:UclOpenCoenBehaviourBoxRig" />
+              <ext:Type xsi:type="TypeMapping" TypeArguments="ext:BehaviourBoxRig" />
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">

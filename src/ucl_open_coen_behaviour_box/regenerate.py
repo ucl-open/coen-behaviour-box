@@ -15,7 +15,7 @@ SCHEMA_FILE = SCHEMA_ROOT / "ucl_open_coen_behaviour_box.json"
 def main():
     models = [
         ucl_open_coen_behaviour_box.task.UclOpenCoenBehaviourBoxTaskLogic,
-        ucl_open_coen_behaviour_box.rig.UclOpenCoenBehaviourBoxRig,
+        ucl_open_coen_behaviour_box.rig.BehaviourBoxRig,
         ExperimentSession
     ]
     model = pydantic.RootModel[Union[tuple(models)]]

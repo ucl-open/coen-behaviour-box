@@ -195,6 +195,165 @@ namespace UclOpenCoenBehaviourBox
     }
 
 
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class BehaviourBoxRig
+    {
+    
+        private string _rootPath;
+    
+        private string _rigId;
+    
+        private string _version;
+    
+        private System.Collections.Generic.Dictionary<string, BehaviorBoard> _behaviorBoard;
+    
+        private System.Collections.Generic.Dictionary<string, SpinnakerCamera> _camera;
+    
+        public BehaviourBoxRig()
+        {
+            _version = "0.1.0";
+            _behaviorBoard = new System.Collections.Generic.Dictionary<string, BehaviorBoard>();
+            _camera = new System.Collections.Generic.Dictionary<string, SpinnakerCamera>();
+        }
+    
+        protected BehaviourBoxRig(BehaviourBoxRig other)
+        {
+            _rootPath = other._rootPath;
+            _rigId = other._rigId;
+            _version = other._version;
+            _behaviorBoard = other._behaviorBoard;
+            _camera = other._camera;
+        }
+    
+        /// <summary>
+        /// The root path on which to log all data.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("rootPath", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="rootPath")]
+        [System.ComponentModel.DescriptionAttribute("The root path on which to log all data.")]
+        public string RootPath
+        {
+            get
+            {
+                return _rootPath;
+            }
+            set
+            {
+                _rootPath = value;
+            }
+        }
+    
+        /// <summary>
+        /// A short code naming this rig, kept when another computer takes over its job, for labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its form is the lab's to decide.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("rigId")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="rigId")]
+        [System.ComponentModel.DescriptionAttribute("A short code naming this rig, kept when another computer takes over its job, for " +
+            "labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its" +
+            " form is the lab\'s to decide.")]
+        public string RigId
+        {
+            get
+            {
+                return _rigId;
+            }
+            set
+            {
+                _rigId = value;
+            }
+        }
+    
+        [Newtonsoft.Json.JsonPropertyAttribute("version")]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="version")]
+        public string Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                _version = value;
+            }
+        }
+    
+        /// <summary>
+        /// Harp Behavior boards by name, such as main (BehaviorBoard-Main): serial port, camera trigger on Trigger0 and running wheel on encoder port 2.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("behaviorBoard", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="behaviorBoard")]
+        [System.ComponentModel.DescriptionAttribute("Harp Behavior boards by name, such as main (BehaviorBoard-Main): serial port, cam" +
+            "era trigger on Trigger0 and running wheel on encoder port 2.")]
+        public System.Collections.Generic.Dictionary<string, BehaviorBoard> BehaviorBoard
+        {
+            get
+            {
+                return _behaviorBoard;
+            }
+            set
+            {
+                _behaviorBoard = value;
+            }
+        }
+    
+        /// <summary>
+        /// Triggered Spinnaker cameras by name, such as box (Camera-Box), whose frame rate is the board's trigger0_frequency.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("camera", Required=Newtonsoft.Json.Required.Always)]
+        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="camera")]
+        [System.ComponentModel.DescriptionAttribute("Triggered Spinnaker cameras by name, such as box (Camera-Box), whose frame rate i" +
+            "s the board\'s trigger0_frequency.")]
+        public System.Collections.Generic.Dictionary<string, SpinnakerCamera> Camera
+        {
+            get
+            {
+                return _camera;
+            }
+            set
+            {
+                _camera = value;
+            }
+        }
+    
+        public System.IObservable<BehaviourBoxRig> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new BehaviourBoxRig(this)));
+        }
+    
+        public System.IObservable<BehaviourBoxRig> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new BehaviourBoxRig(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("RootPath = " + _rootPath + ", ");
+            stringBuilder.Append("RigId = " + _rigId + ", ");
+            stringBuilder.Append("Version = " + _version + ", ");
+            stringBuilder.Append("BehaviorBoard = " + _behaviorBoard + ", ");
+            stringBuilder.Append("Camera = " + _camera);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
     /// <summary>
     /// A pulsed output whose width comes from a calibration curve at run time, such as a reward valve.
     /// </summary>
@@ -1324,165 +1483,6 @@ namespace UclOpenCoenBehaviourBox
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
-    public partial class UclOpenCoenBehaviourBoxRig
-    {
-    
-        private string _rootPath;
-    
-        private string _rigId;
-    
-        private string _version;
-    
-        private System.Collections.Generic.Dictionary<string, BehaviorBoard> _behaviorBoard;
-    
-        private System.Collections.Generic.Dictionary<string, SpinnakerCamera> _camera;
-    
-        public UclOpenCoenBehaviourBoxRig()
-        {
-            _version = "0.0.0-rc1";
-            _behaviorBoard = new System.Collections.Generic.Dictionary<string, BehaviorBoard>();
-            _camera = new System.Collections.Generic.Dictionary<string, SpinnakerCamera>();
-        }
-    
-        protected UclOpenCoenBehaviourBoxRig(UclOpenCoenBehaviourBoxRig other)
-        {
-            _rootPath = other._rootPath;
-            _rigId = other._rigId;
-            _version = other._version;
-            _behaviorBoard = other._behaviorBoard;
-            _camera = other._camera;
-        }
-    
-        /// <summary>
-        /// The root path on which to log all data.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("rootPath", Required=Newtonsoft.Json.Required.Always)]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="rootPath")]
-        [System.ComponentModel.DescriptionAttribute("The root path on which to log all data.")]
-        public string RootPath
-        {
-            get
-            {
-                return _rootPath;
-            }
-            set
-            {
-                _rootPath = value;
-            }
-        }
-    
-        /// <summary>
-        /// A short code naming this rig, kept when another computer takes over its job, for labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its form is the lab's to decide.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("rigId")]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="rigId")]
-        [System.ComponentModel.DescriptionAttribute("A short code naming this rig, kept when another computer takes over its job, for " +
-            "labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its" +
-            " form is the lab\'s to decide.")]
-        public string RigId
-        {
-            get
-            {
-                return _rigId;
-            }
-            set
-            {
-                _rigId = value;
-            }
-        }
-    
-        [Newtonsoft.Json.JsonPropertyAttribute("version")]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="version")]
-        public string Version
-        {
-            get
-            {
-                return _version;
-            }
-            set
-            {
-                _version = value;
-            }
-        }
-    
-        /// <summary>
-        /// Harp Behavior boards by name. This workflow drives main (BehaviorBoard-Main): serial port, camera trigger on Trigger0 and running wheel on encoder port 2.
-        /// </summary>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        [Newtonsoft.Json.JsonPropertyAttribute("behaviorBoard", Required=Newtonsoft.Json.Required.Always)]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="behaviorBoard")]
-        [System.ComponentModel.DescriptionAttribute("Harp Behavior boards by name. This workflow drives main (BehaviorBoard-Main): ser" +
-            "ial port, camera trigger on Trigger0 and running wheel on encoder port 2.")]
-        public System.Collections.Generic.Dictionary<string, BehaviorBoard> BehaviorBoard
-        {
-            get
-            {
-                return _behaviorBoard;
-            }
-            set
-            {
-                _behaviorBoard = value;
-            }
-        }
-    
-        /// <summary>
-        /// Triggered Spinnaker cameras by name. This workflow drives box (Camera-Box), whose frame rate is the board's trigger0_frequency.
-        /// </summary>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        [Newtonsoft.Json.JsonPropertyAttribute("camera", Required=Newtonsoft.Json.Required.Always)]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="camera")]
-        [System.ComponentModel.DescriptionAttribute("Triggered Spinnaker cameras by name. This workflow drives box (Camera-Box), whose" +
-            " frame rate is the board\'s trigger0_frequency.")]
-        public System.Collections.Generic.Dictionary<string, SpinnakerCamera> Camera
-        {
-            get
-            {
-                return _camera;
-            }
-            set
-            {
-                _camera = value;
-            }
-        }
-    
-        public System.IObservable<UclOpenCoenBehaviourBoxRig> Generate()
-        {
-            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new UclOpenCoenBehaviourBoxRig(this)));
-        }
-    
-        public System.IObservable<UclOpenCoenBehaviourBoxRig> Generate<TSource>(System.IObservable<TSource> source)
-        {
-            return System.Reactive.Linq.Observable.Select(source, _ => new UclOpenCoenBehaviourBoxRig(this));
-        }
-    
-        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
-        {
-            stringBuilder.Append("RootPath = " + _rootPath + ", ");
-            stringBuilder.Append("RigId = " + _rigId + ", ");
-            stringBuilder.Append("Version = " + _version + ", ");
-            stringBuilder.Append("BehaviorBoard = " + _behaviorBoard + ", ");
-            stringBuilder.Append("Camera = " + _camera);
-            return true;
-        }
-    
-        public override string ToString()
-        {
-            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
-            stringBuilder.Append(GetType().Name);
-            stringBuilder.Append(" { ");
-            if (PrintMembers(stringBuilder))
-            {
-                stringBuilder.Append(" ");
-            }
-            stringBuilder.Append("}");
-            return stringBuilder.ToString();
-        }
-    }
-
-
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
-    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
-    [Bonsai.CombinatorAttribute(MethodName="Generate")]
     public partial class UclOpenCoenBehaviourBoxTaskLogic
     {
     
@@ -2049,6 +2049,11 @@ namespace UclOpenCoenBehaviourBox
             return Process<BehaviorBoard>(source);
         }
 
+        public System.IObservable<string> Process(System.IObservable<BehaviourBoxRig> source)
+        {
+            return Process<BehaviourBoxRig>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<CalibratedPulse> source)
         {
             return Process<CalibratedPulse>(source);
@@ -2099,11 +2104,6 @@ namespace UclOpenCoenBehaviourBox
             return Process<SpinnakerCamera>(source);
         }
 
-        public System.IObservable<string> Process(System.IObservable<UclOpenCoenBehaviourBoxRig> source)
-        {
-            return Process<UclOpenCoenBehaviourBoxRig>(source);
-        }
-
         public System.IObservable<string> Process(System.IObservable<UclOpenCoenBehaviourBoxTaskLogic> source)
         {
             return Process<UclOpenCoenBehaviourBoxTaskLogic>(source);
@@ -2139,6 +2139,7 @@ namespace UclOpenCoenBehaviourBox
     [System.ComponentModel.DefaultPropertyAttribute("Type")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Transform)]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<BehaviorBoard>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<BehaviourBoxRig>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CalibratedPulse>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CameraTriggerController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<ExperimentSession>))]
@@ -2149,7 +2150,6 @@ namespace UclOpenCoenBehaviourBox
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutputs>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<RunningWheel>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<SpinnakerCamera>))]
-    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxRig>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskLogic>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskParameters>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<DO2>))]
@@ -2320,6 +2320,11 @@ namespace UclOpenCoenBehaviourBox
             return Process<BehaviorBoard>(source);
         }
 
+        public System.IObservable<string> Process(System.IObservable<BehaviourBoxRig> source)
+        {
+            return Process<BehaviourBoxRig>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<CalibratedPulse> source)
         {
             return Process<CalibratedPulse>(source);
@@ -2370,11 +2375,6 @@ namespace UclOpenCoenBehaviourBox
             return Process<SpinnakerCamera>(source);
         }
 
-        public System.IObservable<string> Process(System.IObservable<UclOpenCoenBehaviourBoxRig> source)
-        {
-            return Process<UclOpenCoenBehaviourBoxRig>(source);
-        }
-
         public System.IObservable<string> Process(System.IObservable<UclOpenCoenBehaviourBoxTaskLogic> source)
         {
             return Process<UclOpenCoenBehaviourBoxTaskLogic>(source);
@@ -2410,6 +2410,7 @@ namespace UclOpenCoenBehaviourBox
     [System.ComponentModel.DefaultPropertyAttribute("Type")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Transform)]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<BehaviorBoard>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<BehaviourBoxRig>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CalibratedPulse>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CameraTriggerController>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<ExperimentSession>))]
@@ -2420,7 +2421,6 @@ namespace UclOpenCoenBehaviourBox
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PulseOutputs>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<RunningWheel>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<SpinnakerCamera>))]
-    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxRig>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskLogic>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<UclOpenCoenBehaviourBoxTaskParameters>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<DO2>))]

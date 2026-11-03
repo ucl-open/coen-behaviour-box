@@ -177,7 +177,7 @@ if ($Step -eq 'RigDevice') {
     function Invoke-RigDevice([string]$Member, [string]$Name) {
         $x = $E::Constant([System.Reactive.Linq.Observable]::Return($yaml), [IObservable[string]])
         $des = New-Object UclOpenCoenBehaviourBox.DeserializeFromYaml
-        $des.Type = [Activator]::CreateInstance([Bonsai.Expressions.TypeMapping`1].MakeGenericType([UclOpenCoenBehaviourBox.UclOpenCoenBehaviourBoxRig]))
+        $des.Type = [Activator]::CreateInstance([Bonsai.Expressions.TypeMapping`1].MakeGenericType([UclOpenCoenBehaviourBox.BehaviourBoxRig]))
         $x = $des.Build([Linq.Expressions.Expression[]]@($x))
         $sel = New-Object Bonsai.Expressions.MemberSelectorBuilder; $sel.Selector = $Member
         $x = $sel.Build([Linq.Expressions.Expression[]]@($x))
@@ -220,7 +220,7 @@ if ($Step -eq 'RigDevice') {
     try {
         $x = $E::Constant([System.Reactive.Linq.Observable]::Return($yaml), [IObservable[string]])
         $des = New-Object UclOpenCoenBehaviourBox.DeserializeFromYaml
-        $des.Type = [Activator]::CreateInstance([Bonsai.Expressions.TypeMapping`1].MakeGenericType([UclOpenCoenBehaviourBox.UclOpenCoenBehaviourBoxRig]))
+        $des.Type = [Activator]::CreateInstance([Bonsai.Expressions.TypeMapping`1].MakeGenericType([UclOpenCoenBehaviourBox.BehaviourBoxRig]))
         $x = $des.Build([Linq.Expressions.Expression[]]@($x))
         $cb = New-Object Bonsai.Expressions.CombinatorBuilder
         $ser = New-Object UclOpenCoenBehaviourBox.SerializeToJson; $ser.Formatting = 'Indented'; $cb.Combinator = $ser

@@ -6,11 +6,11 @@ from open_rigs.devices.behavior_board import CameraTriggerController, RunningWhe
 from ucl_open_coen_behaviour_box.rig import (
     BehaviorBoard,
     SpinnakerCamera,
-    UclOpenCoenBehaviourBoxRig
+    BehaviourBoxRig
 )
 
 TEMPLATE_PATH = Path("config/rig-template.yml")
-SCHEMA_PATH = "../src/DataSchemas/ucl_open_coen_behaviour_box.json#/$defs/UclOpenCoenBehaviourBoxRig"
+SCHEMA_PATH = "../src/DataSchemas/ucl_open_coen_behaviour_box.json#/$defs/BehaviourBoxRig"
 HEADER = """\
 # Rig configuration. On a rig this file is <ConfigRoot>\\<MACHINE-NAME>\\rig.yml, copied from
 # config/rig-template.yml by scripts/deploy.ps1: fill in every CHANGE-ME value there, and anything
@@ -28,7 +28,7 @@ HEADER = """\
 # Placeholder values only: they must look wrong until a rig fills them in. The trigger rate,
 # encoder resolution and wheel size are the box's design values; a rig changes them only if its
 # hardware differs.
-rig = UclOpenCoenBehaviourBoxRig(
+rig = BehaviourBoxRig(
     rig_id="CHANGE-ME",
     root_path="C:\\Data\\CHANGE-ME",
     behavior_board={

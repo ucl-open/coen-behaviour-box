@@ -1,0 +1,54 @@
+# Whether the committed schema, generated C# and rig template are what the Python makes. The
+# workflow reads rig.yml with the generated classes, so an edit to rig.py, task.py or the lab's
+# rig schema (lib-open-rigs, open_rigs.rigs) that was not regenerated leaves the workflow
+# refusing keys the Python allows. The fix is to run, from the repo root:
+#   uv run regenerate-schemas
+#   uv run python examples/rig.py
+# and commit what they change. lib-open-rigs' update-workflows does this after every push
+# there; this catches an edit made here.
+
+name: Schemas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regenerated:
+    # Windows, as on the rigs: the generators' line endings are the ones .gitattributes expects.
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+      - name: Regenerate
+        shell: pwsh
+        run: |
+          dotnet tool restore
+          uv run regenerate-schemas
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          # regenerate.py does not check its sgen run (BACKLOG), and a failed one leaves the old
+          # C# in place, which would pass as current: run it again, checked.
+          dotnet bonsai.sgen src/DataSchemas/ucl_open_coen_behaviour_box.json --output src/Extensions --serializer json --serializer yaml
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          uv run python examples/rig.py
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Nothing changed
+        shell: pwsh
+        run: |
+          $changed = git status --porcelain -- src/DataSchemas src/Extensions config/rig-template.yml
+          if ($changed) {
+            Write-Output "::error::Generated files are out of date with the Python. Run uv run regenerate-schemas and uv run python examples/rig.py, then commit:"
+            $changed
+            git diff --stat
+            exit 1
+          }
+          Write-Output "Schema, generated C# and rig template match the Python."

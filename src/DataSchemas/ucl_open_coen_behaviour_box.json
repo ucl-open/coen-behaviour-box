@@ -76,6 +76,53 @@
       "title": "BehaviorBoard",
       "type": "object"
     },
+    "BehaviourBoxRig": {
+      "properties": {
+        "rootPath": {
+          "description": "The root path on which to log all data.",
+          "title": "RootPath",
+          "type": "string"
+        },
+        "rigId": {
+          "default": null,
+          "description": "A short code naming this rig, kept when another computer takes over its job, for labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its form is the lab's to decide.",
+          "title": "RigId",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "const": "0.1.0",
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        },
+        "behaviorBoard": {
+          "additionalProperties": {
+            "$ref": "#/$defs/BehaviorBoard"
+          },
+          "description": "Harp Behavior boards by name, such as main (BehaviorBoard-Main): serial port, camera trigger on Trigger0 and running wheel on encoder port 2.",
+          "title": "BehaviorBoard",
+          "type": "object"
+        },
+        "camera": {
+          "additionalProperties": {
+            "$ref": "#/$defs/SpinnakerCamera"
+          },
+          "description": "Triggered Spinnaker cameras by name, such as box (Camera-Box), whose frame rate is the board's trigger0_frequency.",
+          "title": "Camera",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rootPath",
+        "behaviorBoard",
+        "camera"
+      ],
+      "title": "BehaviourBoxRig",
+      "type": "object"
+    },
     "CalibratedPulse": {
       "description": "A pulsed output whose width comes from a calibration curve at run time, such as a reward valve.",
       "properties": {
@@ -434,53 +481,6 @@
       "title": "SpinnakerCamera",
       "type": "object"
     },
-    "UclOpenCoenBehaviourBoxRig": {
-      "properties": {
-        "rootPath": {
-          "description": "The root path on which to log all data.",
-          "title": "RootPath",
-          "type": "string"
-        },
-        "rigId": {
-          "default": null,
-          "description": "A short code naming this rig, kept when another computer takes over its job, for labs that build it into session IDs (for example the <RR> in ses-<NNN><RR>). Its form is the lab's to decide.",
-          "title": "RigId",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "version": {
-          "const": "0.0.0-rc1",
-          "default": "0.0.0-rc1",
-          "title": "Version",
-          "type": "string"
-        },
-        "behaviorBoard": {
-          "additionalProperties": {
-            "$ref": "#/$defs/BehaviorBoard"
-          },
-          "description": "Harp Behavior boards by name. This workflow drives main (BehaviorBoard-Main): serial port, camera trigger on Trigger0 and running wheel on encoder port 2.",
-          "title": "BehaviorBoard",
-          "type": "object"
-        },
-        "camera": {
-          "additionalProperties": {
-            "$ref": "#/$defs/SpinnakerCamera"
-          },
-          "description": "Triggered Spinnaker cameras by name. This workflow drives box (Camera-Box), whose frame rate is the board's trigger0_frequency.",
-          "title": "Camera",
-          "type": "object"
-        }
-      },
-      "required": [
-        "rootPath",
-        "behaviorBoard",
-        "camera"
-      ],
-      "title": "UclOpenCoenBehaviourBoxRig",
-      "type": "object"
-    },
     "UclOpenCoenBehaviourBoxTaskLogic": {
       "properties": {
         "version": {
@@ -519,11 +519,11 @@
       "$ref": "#/$defs/UclOpenCoenBehaviourBoxTaskLogic"
     },
     {
-      "$ref": "#/$defs/UclOpenCoenBehaviourBoxRig"
+      "$ref": "#/$defs/BehaviourBoxRig"
     },
     {
       "$ref": "#/$defs/ExperimentSession"
     }
   ],
-  "title": "RootModel[Union[UclOpenCoenBehaviourBoxTaskLogic, UclOpenCoenBehaviourBoxRig, ExperimentSession]]"
+  "title": "RootModel[Union[UclOpenCoenBehaviourBoxTaskLogic, BehaviourBoxRig, ExperimentSession]]"
 }

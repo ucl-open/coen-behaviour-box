@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../src/DataSchemas/ucl_open_coen_behaviour_box.json#/$defs/UclOpenCoenBehaviourBoxRig
+# yaml-language-server: $schema=../src/DataSchemas/ucl_open_coen_behaviour_box.json#/$defs/BehaviourBoxRig
 # Rig configuration. On a rig this file is <ConfigRoot>\<MACHINE-NAME>\rig.yml, copied from
 # config/rig-template.yml by scripts/deploy.ps1: fill in every CHANGE-ME value there, and anything
 # else that differs on this rig. Per-rig values are never committed. To change the template
@@ -33,4 +33,4 @@ camera:
     triggerFrequency: 50.0
 rigId: CHANGE-ME
 rootPath: C:\Data\CHANGE-ME
-version: 0.0.0-rc1
+version: 0.1.0
