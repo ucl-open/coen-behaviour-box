@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Union
 import json
 import pydantic
-import os
+import subprocess
 
 from open_rigs.core import ExperimentSession
 import ucl_open_coen_behaviour_box.rig
@@ -23,7 +23,12 @@ def main():
     SCHEMA_ROOT.mkdir(parents=True, exist_ok=True)
     SCHEMA_FILE.write_text(json.dumps(schema, indent=2))
     print(f"Schema written to {SCHEMA_FILE}")
-    os.system("dotnet bonsai.sgen src/DataSchemas/ucl_open_coen_behaviour_box.json --output src/Extensions --serializer json --serializer yaml")
+    # A failed sgen must fail this too: update-workflows would otherwise commit
+    # the new schema beside a stale Generated.cs.
+    code = subprocess.run(["dotnet", "bonsai.sgen", str(SCHEMA_FILE), "--output", "src/Extensions",
+                           "--serializer", "json", "--serializer", "yaml"]).returncode
+    if code:
+        raise SystemExit(code)
 
 
 if __name__ == "__main__":
