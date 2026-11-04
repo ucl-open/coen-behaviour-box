@@ -30,7 +30,9 @@ HEADER = """\
 # hardware differs.
 rig = BehaviourBoxRig(
     rig_id="CHANGE-ME",
-    root_path="C:\\Data\\CHANGE-ME",
+    # The folder rig-sync copies to the server and rig-control reads; rig-setup's rig.yml row
+    # is wrong for any other (S3-L2, 4 Nov 2026).
+    root_path="C:\\Coen-Lab-Local\\Acquired-Data",
     behavior_board={
         "main": BehaviorBoard(
             port_name="COM-CHANGE-ME",

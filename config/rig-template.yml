@@ -32,4 +32,4 @@ camera:
     serialNumber: CHANGE-ME
     triggerFrequency: 50.0
 rigId: CHANGE-ME
-rootPath: C:\Data\CHANGE-ME
+rootPath: C:\Coen-Lab-Local\Acquired-Data
