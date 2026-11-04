@@ -13,7 +13,9 @@
 behaviorBoard:
   main:
     cameraTriggerController:
+      trigger0Enabled: true
       trigger0Frequency: 50
+      trigger1Enabled: false
       trigger1Frequency: 50
     liveView: null
     portName: COM-CHANGE-ME
