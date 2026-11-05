@@ -11,9 +11,9 @@ param(
 #      ExperimentManifest expects, and that each window in config\main.layout is on a node it fits.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
 #      and a missing entry or a name breaking the naming rules stops it; and every key in it
-#      reaches the RigSchema JSON the session logs.
+#      reaches the RigSchema JSON the experiment logs.
 #   4. ExposureFitsTrigger's limit (19,000 us passes at 50 Hz, 19,001 and 30,000 stop),
-#      SessionKey on a session folder's path, no dump or register map of the workflow's own, Watchdog's own message, and CameraOverrides'
+#      SessionKey on an experiment folder's path, no dump or register map of the workflow's own, Watchdog's own message, and CameraOverrides'
 #      refusal without a "Parameter name" line; in main.bonsai, every timeout is a Watchdog with a message.
 # Needs a deployed clone (scripts\deploy.cmd: .bonsai\Packages). Exit 0 when all four pass.
 $ErrorActionPreference = 'Stop'
@@ -225,7 +225,7 @@ if ($Step -eq 'RigDevice') {
             else { "  FAIL  $($c[1]): $($x.GetType().Name): $($x.Message)"; $failed++ }
         }
     }
-    # The session's RigSchema JSON is rig.yml as parsed, and the manifest keeps only rig.yml's hash
+    # The experiment's RigSchema JSON is rig.yml as parsed, and the manifest keeps only rig.yml's hash
     # (OpenRigs.Manifest 0.1.0-local.7), so every key in rig.yml must reach the JSON.
     try {
         $x = $E::Constant([System.Reactive.Linq.Observable]::Return($yaml), [IObservable[string]])
@@ -272,11 +272,11 @@ if ($Step -eq 'Checks') {
     }
     $key = [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\sub-M1\ses-01_date-2026-10-30T17-46-16')
     if ($key -eq 'sub-M1/ses-01_date-2026-10-30T17-46-16') { "  ok    SessionKey $key" } else { "  FAIL  SessionKey gave '$key'"; $failed++ }
-    $x = Get-Refusal { [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\not-a-session') }
-    if ($x -and $x.Message.Contains('does not end in sub-')) { "  ok    SessionKey refused a path that is not a session folder" } else { "  FAIL  SessionKey accepted 'C:\Data\not-a-session'"; $failed++ }
+    $x = Get-Refusal { [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\not-an-experiment') }
+    if ($x -and $x.Message.Contains('does not end in sub-')) { "  ok    SessionKey refused a path that is not an experiment folder" } else { "  FAIL  SessionKey accepted 'C:\Data\not-an-experiment'"; $failed++ }
     $x = Get-Refusal { [UclOpenCoenBehaviourBox.SessionKey]::FromPathPrefix('C:\Data\sub-M1\ses-03/1_date-2026-10-30T17-46-16') }
     if ($x -and $x.Message.Contains('in SubjectId or SessionId')) { "  ok    SessionKey refused a SessionId with a slash, naming the cause" } else { "  FAIL  SessionKey on a SessionId with a slash: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
-    $session = Join-Path ([IO.Path]::GetTempPath()) ("hds-" + [guid]::NewGuid().ToString('N'))
+    $experiment = Join-Path ([IO.Path]::GetTempPath()) ("hds-" + [guid]::NewGuid().ToString('N'))
     try {
         # The board's dump and register map come from RecordHarpDevices (OpenRigs.HarpDevices), from
         # rig.yml: nothing in the workflow asks the board for its dump or names its register map itself.
@@ -284,14 +284,14 @@ if ($Step -eq 'Checks') {
         if ($wf -match 'DumpRegisters>true</harp:DumpRegisters>\s*<harp:MuteReplies' -or $wf -match 'ext:HarpDeviceSchema' -or $wf -match '>BehaviorCommands<') {
             "  FAIL  main.bonsai still asks for the board's dump, writes its register map, or names its commands BehaviorCommands, itself"; $failed++
         } else { "  ok    main.bonsai leaves the board's dump and register map to RecordHarpDevices" }
-        $json =[UclOpenCoenBehaviourBox.SessionJson]::Write($session, 'RigSchema', '{"a":1}', [datetime]::SpecifyKind([datetime]'2026-11-02T09:05:07', 'Utc'))
-        if ($json -eq (Join-Path $session 'RigSchema\RigSchema_2026-11-02T09-05-07.json') -and [IO.File]::ReadAllText($json) -eq '{"a":1}' -and -not (Test-Path "$json.tmp")) {
-            "  ok    SessionJson wrote RigSchema\RigSchema_<DateTime>.json under the session folder it was given"
+        $json =[UclOpenCoenBehaviourBox.SessionJson]::Write($experiment, 'RigSchema', '{"a":1}', [datetime]::SpecifyKind([datetime]'2026-11-02T09:05:07', 'Utc'))
+        if ($json -eq (Join-Path $experiment 'RigSchema\RigSchema_2026-11-02T09-05-07.json') -and [IO.File]::ReadAllText($json) -eq '{"a":1}' -and -not (Test-Path "$json.tmp")) {
+            "  ok    SessionJson wrote RigSchema\RigSchema_<DateTime>.json under the experiment folder it was given"
         } else { "  FAIL  SessionJson wrote '$json'"; $failed++ }
-        # LogDataSchema in OpenRigs.Logging 0.1.0-bbox.1 reads its file name before the session folder exists.
+        # LogDataSchema in OpenRigs.Logging 0.1.0-bbox.1 reads its file name before the experiment folder exists.
         if ((Get-Content (Join-Path $repo 'src\main.bonsai') -Raw) -match 'LogDataSchema\.bonsai') { "  FAIL  main.bonsai uses LogDataSchema, which writes to the include's saved path in this build"; $failed++ }
         else { "  ok    main.bonsai does not use LogDataSchema" }
-    } finally { Remove-Item $session -Recurse -Force -ErrorAction SilentlyContinue }
+    } finally { Remove-Item $experiment -Recurse -Force -ErrorAction SilentlyContinue }
 
     # The Rx operators below run on worker threads: load everything now and drop the resolver,
     # as the RigDevice step does, so no scriptblock is called from those threads.
