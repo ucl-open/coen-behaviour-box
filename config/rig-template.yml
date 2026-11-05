@@ -34,4 +34,4 @@ camera:
     serialNumber: CHANGE-ME
     triggerFrequency: 50.0
 rigId: CHANGE-ME
-rootPath: C:\Coen-Lab-Local\Acquired-Data\Behaviour_Box
+rootPath: C:\Coen-Lab-Local\Acquired-Data
