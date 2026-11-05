@@ -122,14 +122,14 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Initialization</Name>
-        <Description>The session controller (OpenRigs.Control, SessionControl): SubjectId and SessionId from this node's properties or the command line (--property:SubjectId=...), the run length (whole minutes) and the camera's ExposureTime and Gain (taken live by the camera, Hardware &gt; Camera) as parameters the controller may change until Go, and the control endpoint the rig agent talks to (TCP 5561). The workflow starts into ready mode: board connected, camera armed and streaming, nothing recorded, waiting for Go. At Go the IDs and the run length are checked once and published as RunSettings, which logging waits for; if an ID is empty or the run length is not 1 to 9999, the workflow stops with "Sequence contains no elements." and nothing is recorded. Stop from the controller ends the workflow through SessionStoppedException, closing every file.</Description>
+        <Description>The session controller (OpenRigs.Control, ExperimentControl): SubjectId and SessionId from this node's properties or the command line (--property:SubjectId=...), the run length (whole minutes) and the camera's ExposureTime and Gain (taken live by the camera, Hardware &gt; Camera) as parameters the controller may change until Go, and the control endpoint the rig agent talks to (TCP 5561). The workflow starts into ready mode: board connected, camera armed and streaming, nothing recorded, waiting for Go. At Go the IDs and the run length are checked once and published as RunSettings, which logging waits for; if an ID is empty or the run length is not 1 to 9999, the workflow stops with "Sequence contains no elements." and nothing is recorded. Stop from the controller ends the workflow through ExperimentStoppedException, closing every file.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="SubjectId" />
               <Property Name="SessionId" />
             </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Control:SessionControl.bonsai">
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Control:ExperimentControl.bonsai">
               <SubjectId />
               <SessionId />
               <ControlEndpoint>@tcp://127.0.0.1:5561</ControlEndpoint>
@@ -159,19 +159,19 @@
               <Commands />
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>SessionGo</Name>
+              <Name>ExperimentGo</Name>
             </Expression>
             <Expression xsi:type="MemberSelector">
               <Selector>SubjectId</Selector>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>SessionGo</Name>
+              <Name>ExperimentGo</Name>
             </Expression>
             <Expression xsi:type="MemberSelector">
               <Selector>SessionId</Selector>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>SessionGo</Name>
+              <Name>ExperimentGo</Name>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="orcl:ParameterValue">
@@ -839,7 +839,7 @@
                           <Combinator xsi:type="rx:Zip" />
                         </Expression>
                         <Expression xsi:type="SubscribeSubject">
-                          <Name>SessionGo</Name>
+                          <Name>ExperimentGo</Name>
                         </Expression>
                         <Expression xsi:type="Combinator">
                           <Combinator xsi:type="orcl:ParameterValue">
@@ -976,7 +976,7 @@
             </Expression>
             <Expression xsi:type="hd:RecordHarpDevices">
               <Name>RecordHarpDevices</Name>
-              <Description>Checks the Behavior board at Start and records it into each session, from rig.yml alone (OpenRigs.HarpDevices): for each Harp device in rig.yml whose data this workflow publishes (BehaviorBoard-Main.Data), the board on its portName must have its usbSerial, or the workflow stops saying which board is where; 0.5 s after the session folder (PathPrefix) appears it asks the board for a register dump on BehaviorBoard-Main.Commands, which the board&apos;s log records (Go comes long after BoardClockSet, so the dump is on the UTC clock); and it writes BehaviorBoard-Main\BehaviorBoard-Main_device.json (WhoAmI, hardware, firmware and core versions, Harp and USB serials) and BehaviorBoard-Main\BehaviorBoard-Main.yml, Harp.Behavior&apos;s register map (the Open Rigs logging spec, section 5). A board reporting another WhoAmI stops the workflow. SessionManifest expects both files (harp in its ExpectedFiles).</Description>
+              <Description>Checks the Behavior board at Start and records it into each session, from rig.yml alone (OpenRigs.HarpDevices): for each Harp device in rig.yml whose data this workflow publishes (BehaviorBoard-Main.Data), the board on its portName must have its usbSerial, or the workflow stops saying which board is where; 0.5 s after the session folder (PathPrefix) appears it asks the board for a register dump on BehaviorBoard-Main.Commands, which the board&apos;s log records (Go comes long after BoardClockSet, so the dump is on the UTC clock); and it writes BehaviorBoard-Main\BehaviorBoard-Main_device.json (WhoAmI, hardware, firmware and core versions, Harp and USB serials) and BehaviorBoard-Main\BehaviorBoard-Main.yml, Harp.Behavior&apos;s register map (the Open Rigs logging spec, section 5). A board reporting another WhoAmI stops the workflow. ExperimentManifest expects both files (harp in its ExpectedFiles).</Description>
               <hd:ConfigRoot>C:\Coen-Lab-Local\RigConfigs</hd:ConfigRoot>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
@@ -993,8 +993,8 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:SubscribeWhen" />
             </Expression>
-            <Expression xsi:type="mf:SessionManifest">
-              <Name>SessionManifest</Name>
+            <Expression xsi:type="mf:ExperimentManifest">
+              <Name>ExperimentManifest</Name>
               <Description>Writes manifest.json into the session folder (OpenRigs.Manifest), finding PathPrefix itself: once when the folder appears (status partial, outcome running) and again when the run ends. Its input is the run, the frames recorded: completed when the run length&apos;s frames are written, error with a Watchdog&apos;s message, run.items the frame count; a controller stop is stopped, with the stop&apos;s reason. It records the machine, this repo&apos;s commit, Bonsai&apos;s command line (--property values), the settings at Go (SubjectId, SessionId, RunLengthMins), rig.yml&apos;s path and hash as read at Start (its settings are in RigSchema/), and what the session must leave: a folder for each device in rig.yml this workflow publishes (BehaviorBoard-Main/, Camera-Box/), RigSchema/, and (harp) for each Harp device in rig.yml the two files RecordHarpDevices writes, BehaviorBoard-Main_device.json and BehaviorBoard-Main.yml, which the overnight copy (rig-sync) alarms on if missing. A device folder holding only those two counts as empty. Errors on the board&apos;s logging chain do not reach it.</Description>
               <mf:IngestScript>coen-behaviour-box</mf:IngestScript>
               <mf:ConfigFiles>C:\Coen-Lab-Local\RigConfigs\%COMPUTERNAME%\rig.yml</mf:ConfigFiles>
@@ -1083,7 +1083,7 @@
         <lv:VideoPort>5558</lv:VideoPort>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
-        <Property Name="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml, read by RigConfig, RecordHarpDevices and LiveView. SessionManifest's ConfigFiles names rig.yml's own path and does not follow it; the manifest notes when the two disagree." />
+        <Property Name="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml, read by RigConfig, RecordHarpDevices and LiveView. ExperimentManifest's ConfigFiles names rig.yml's own path and does not follow it; the manifest notes when the two disagree." />
       </Expression>
     </Nodes>
     <Edges>

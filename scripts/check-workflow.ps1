@@ -8,7 +8,7 @@ param(
 #      before it subscribes anything: every type, selector, include, subject and mapping. It
 #      checks that every node typed with where rig.yml is has the same root, then builds against
 #      the template filled in as a rig's, and checks what RecordHarpDevices made from it and what
-#      SessionManifest expects, and that each window in config\main.layout is on a node it fits.
+#      ExperimentManifest expects, and that each window in config\main.layout is on a node it fits.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
 #      and a missing entry or a name breaking the naming rules stops it; and every key in it
 #      reaches the RigSchema JSON the session logs.
@@ -58,7 +58,7 @@ if ($Step -eq 'Build') {
     $reader = [Xml.XmlReader]::Create($workflow)
     try { $wb = [Bonsai.WorkflowBuilder]::Serializer.Deserialize($reader) } finally { $reader.Close() }
     # The nodes that read rig.yml when the workflow is built (RecordHarpDevices, StreamDevices,
-    # SessionManifest) read a copy of the template with its placeholders filled, as a rig's, so
+    # ExperimentManifest) read a copy of the template with its placeholders filled, as a rig's, so
     # the build makes what it makes on a rig: this machine need not have a rig.yml.
     $rigDir = Join-Path $bin "config\$([Environment]::MachineName)"
     $null = New-Item -ItemType Directory -Path $rigDir -Force
@@ -69,15 +69,15 @@ if ($Step -eq 'Build') {
     if (-not $template.Contains("rootPath: $bin")) { throw "check-workflow: config\rig-template.yml's rootPath is not C:\Coen-Lab-Local\Acquired-Data; update the Replace above." }
     [IO.File]::WriteAllText($rigYml, $template)
     # Before they are overwritten below: every node's own copy of where rig.yml is (RigConfig's
-    # ResolveRigConfigDirectory, RecordHarpDevices, SessionManifest's ConfigFiles, LiveView) is
+    # ResolveRigConfigDirectory, RecordHarpDevices, ExperimentManifest's ConfigFiles, LiveView) is
     # typed by hand into main.bonsai, and they must all be the same root.
     function Get-ConfigRoots($graph) {
         foreach ($n in $graph) {
             $b = [Bonsai.Expressions.ExpressionBuilder]::Unwrap($n.Value)
             $owner = if ($b -is [Bonsai.Expressions.CombinatorBuilder]) { $b.Combinator } else { $b }
             if ($owner -and $owner.GetType().Namespace -like 'OpenRigs.*' -and $owner.PSObject.Properties['ConfigRoot']) { "$($owner.GetType().Name)=$($owner.ConfigRoot)" }
-            if ($b.GetType().Name -eq 'SessionManifest') {
-                foreach ($file in $b.ConfigFiles -split ';') { if ($file -match '^(.*)\\%COMPUTERNAME%\\rig\.yml$') { "SessionManifest.ConfigFiles=$($Matches[1])" } }
+            if ($b.GetType().Name -eq 'ExperimentManifest') {
+                foreach ($file in $b.ConfigFiles -split ';') { if ($file -match '^(.*)\\%COMPUTERNAME%\\rig\.yml$') { "ExperimentManifest.ConfigFiles=$($Matches[1])" } }
             }
             if ($b -is [Bonsai.Expressions.IWorkflowExpressionBuilder] -and $b.Workflow) { Get-ConfigRoots $b.Workflow }
         }
@@ -90,16 +90,16 @@ if ($Step -eq 'Build') {
     # ConfigRoot set as Bonsai's launcher sets --property:ConfigRoot: one workflow property, mapped
     # to every node that reads rig.yml by root (RigConfig, RecordHarpDevices, LiveView; HarpDevices
     # 0.1.0-local.5 and LiveView local.8 let it, 3 Nov 2026), so a node it misses reads the
-    # machine's own rig.yml and fails here. SessionManifest's ConfigFiles names rig.yml's own path
+    # machine's own rig.yml and fails here. ExperimentManifest's ConfigFiles names rig.yml's own path
     # and is set by hand.
     [Bonsai.Expressions.ExpressionBuilderGraphExtensions]::SetWorkflowProperty($wb.Workflow, 'ConfigRoot', (Join-Path $bin 'config'))
-    $stayed = @(Get-ConfigRoots $wb.Workflow | Where-Object { $_ -notlike 'SessionManifest.*' -and ($_ -split '=', 2)[1] -ne (Join-Path $bin 'config') })
+    $stayed = @(Get-ConfigRoots $wb.Workflow | Where-Object { $_ -notlike 'ExperimentManifest.*' -and ($_ -split '=', 2)[1] -ne (Join-Path $bin 'config') })
     if ($stayed.Count) { "  FAIL  --property:ConfigRoot did not reach $($stayed -join '; ')"; $rootsOk = $false }
     else { "  ok    --property:ConfigRoot reaches every node that reads rig.yml by root" }
     function Set-ConfigFiles($graph) {
         foreach ($n in $graph) {
             $b = [Bonsai.Expressions.ExpressionBuilder]::Unwrap($n.Value)
-            if ($b.GetType().Name -eq 'SessionManifest') { $b.ConfigFiles = $rigYml }
+            if ($b.GetType().Name -eq 'ExperimentManifest') { $b.ConfigFiles = $rigYml }
             if ($b -is [Bonsai.Expressions.IWorkflowExpressionBuilder] -and $b.Workflow) { Set-ConfigFiles $b.Workflow }
         }
     }
@@ -112,7 +112,7 @@ if ($Step -eq 'Build') {
         exit 1
     }
     # What the build made, read from the objects in the built expression: RecordHarpDevices'
-    # record and dump request for the board, and SessionManifest's expected files (harp: the
+    # record and dump request for the board, and ExperimentManifest's expected files (harp: the
     # board's record and register map).
     Add-Type -ReferencedAssemblies System.Core -TypeDefinition @'
 public class BuiltObjects : System.Linq.Expressions.ExpressionVisitor {
@@ -136,9 +136,9 @@ public class BuiltObjects : System.Linq.Expressions.ExpressionVisitor {
     $planField = if ($recorder.Count) { $recorder[0].GetType().GetFields([Reflection.BindingFlags]'Instance,NonPublic,Public') | Where-Object { $_.FieldType.Name -eq 'ExpectedPlan' } | Select-Object -First 1 }
     $expected = if ($planField) { @($planField.GetValue($recorder[0]).Entries | ForEach-Object { $_.Path }) } else { @() }
     $want = 'BehaviorBoard-Main/', 'Camera-Box/', 'BehaviorBoard-Main/BehaviorBoard-Main_device.json', 'BehaviorBoard-Main/BehaviorBoard-Main.yml', 'RigSchema/'
-    if (($expected -join ', ') -eq ($want -join ', ')) { "  ok    SessionManifest expects $($expected -join ', ')" }
+    if (($expected -join ', ') -eq ($want -join ', ')) { "  ok    ExperimentManifest expects $($expected -join ', ')" }
     else {
-        "  FAIL  SessionManifest expects '$($expected -join ', ')', not '$($want -join ', ')'"; $failed++
+        "  FAIL  ExperimentManifest expects '$($expected -join ', ')', not '$($want -join ', ')'"; $failed++
         if ($planField) { foreach ($note in $planField.GetValue($recorder[0]).Notes) { "        its note: $note" } }
     }
     # config\main.layout's windows, on the nodes as the editor has them: Bonsai loads each group
