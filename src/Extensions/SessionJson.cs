@@ -8,18 +8,18 @@ using Bonsai;
 namespace UclOpenCoenBehaviourBox
 {
     /// <summary>
-    /// Writes settings JSON into the session folder as &lt;Name&gt;\&lt;Name&gt;_&lt;DateTime&gt;.json (the Open Rigs
-    /// logging spec, section 6), from the text and the session folder (PathPrefix) together. In place of
+    /// Writes settings JSON into the experiment folder as &lt;Name&gt;\&lt;Name&gt;_&lt;DateTime&gt;.json (the Open Rigs
+    /// logging spec, section 6), from the text and the experiment folder (PathPrefix) together. In place of
     /// OpenRigs.Logging's LogDataSchema: in the 0.1.0-bbox.1 build its writer reads its file name when the
-    /// workflow starts, before the session folder exists, so it writes to the path saved in the include
+    /// workflow starts, before the experiment folder exists, so it writes to the path saved in the include
     /// (open-rigs 6badbdd fixes it, on a branch not yet in main or the build, 2 Nov 2026).
     /// </summary>
     [Combinator]
     [WorkflowElementCategory(ElementCategory.Sink)]
-    [Description("Writes the JSON text (Item1) into the session folder (Item2, PathPrefix) as <Name>\\<Name>_<DateTime>.json, DateTime the write's UTC time.")]
+    [Description("Writes the JSON text (Item1) into the experiment folder (Item2, PathPrefix) as <Name>\\<Name>_<DateTime>.json, DateTime the write's UTC time.")]
     public class SessionJson
     {
-        [Description("The settings' name, their folder in the session (RigSchema).")]
+        [Description("The settings' name, their folder in the experiment folder (RigSchema).")]
         public string Name { get; set; }
 
         public IObservable<Tuple<string, string>> Process(IObservable<Tuple<string, string>> source)

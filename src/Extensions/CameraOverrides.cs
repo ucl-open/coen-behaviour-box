@@ -9,7 +9,7 @@ namespace UclOpenCoenBehaviourBox
     /// Replaces a camera's binning from rig.yml with the value set here, for as long as it stays
     /// set (in the editor, until cleared or Bonsai closes unsaved). Blank by default, and blank
     /// keeps rig.yml's value, so rig.yml stays the rig's standing setting. Exposure and gain are
-    /// not here: they are session parameters the controller changes live while ready (Hardware >
+    /// not here: they are experiment parameters the controller changes live while ready (Hardware >
     /// Camera). The serial number is not here either: it is what binds the camera's name to its
     /// hardware, which is rig.yml's job. The output is a copy; the RigConfig subject keeps
     /// rig.yml as read.
