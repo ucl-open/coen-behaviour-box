@@ -684,7 +684,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Logging</Name>
-        <Description>Waits for RunSettings, then LogController creates the experiment folder (PathPrefix). Once it exists: the video and its CSV, and, once the board's clock is also set (BoardClockSet, from Hardware > BehaviorBoard > Clock), every Behavior board message, including the register dump RecordHarpDevices asks for once the folder exists, so the board log records the board's settings. The board's own open-time dump, before the clock is set, is not logged. Each device logs into a folder of its own name, taken from its subject's Name (BehaviorBoard-Main, Camera-Box), as &lt;Name&gt;_&lt;DateTime&gt; files in one-hour chunks on the board's Harp clock (the Open Rigs logging spec). Also, once the folder exists, the spec's settings and device metadata: the rig settings as parsed from rig.yml into RigSchema\RigSchema_&lt;DateTime&gt;.json (section 6; the settings at Go are in the manifest's control section), and, from RecordHarpDevices, the board's record BehaviorBoard-Main\BehaviorBoard-Main_device.json and Harp.Behavior's device.yml, the register map, as BehaviorBoard-Main\BehaviorBoard-Main.yml (section 5), so the board's &lt;Name&gt;_&lt;Register&gt;_&lt;DateTime&gt;.bin files can be decoded from the experiment alone.</Description>
+        <Description>Waits for RunSettings, then LogController creates the experiment folder (PathPrefix). Once it exists: the video and its CSV, and, once the board's clock is also set (BoardClockSet, from Hardware > BehaviorBoard > Clock), every Behavior board message, including the register dump RecordHarpDevices asks for once the folder exists, so the board log records the board's settings. The board's own open-time dump, before the clock is set, is not logged. Each device logs into a folder of its own name, taken from its subject's Name (BehaviorBoard-Main, Camera-Box), as &lt;Name&gt;_&lt;DateTime&gt; files in one-hour chunks on the board's Harp clock (the Open Rigs logging spec). Also, once the folder exists, the spec's settings and device metadata: the rig settings as parsed from rig.yml into Schemas\Schemas_Rig_&lt;DateTime&gt;.json and, from ExperimentSettings, the experiment's settings at Go (subject, session, workflow, commit, who launched and sent Go, every ExperimentControl parameter) into Schemas\Schemas_Experiment_&lt;DateTime&gt;.json (section 6), and, from RecordHarpDevices, the board's record BehaviorBoard-Main\BehaviorBoard-Main_device.json and Harp.Behavior's device.yml, the register map, as BehaviorBoard-Main\BehaviorBoard-Main.yml (section 5), so the board's &lt;Name&gt;_&lt;Register&gt;_&lt;DateTime&gt;.bin files can be decoded from the experiment alone.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="SubscribeSubject">
@@ -995,10 +995,10 @@
             </Expression>
             <Expression xsi:type="mf:ExperimentManifest">
               <Name>ExperimentManifest</Name>
-              <Description>Writes manifest.json into the experiment folder (OpenRigs.Manifest), finding PathPrefix itself: once when the folder appears (status partial, outcome running) and again when the run ends. Its input is the run, the frames recorded: completed when the run length&apos;s frames are written, error with a Watchdog&apos;s message, run.items the frame count; a controller stop is stopped, with the stop&apos;s reason. It records the machine, this repo&apos;s commit, Bonsai&apos;s command line (--property values), the settings at Go (SubjectId, SessionId, RunLengthMins), rig.yml&apos;s path and hash as read at Start (its settings are in RigSchema/), and what the experiment must leave: a folder for each device in rig.yml this workflow publishes (BehaviorBoard-Main/, Camera-Box/), RigSchema/, and (harp) for each Harp device in rig.yml the two files RecordHarpDevices writes, BehaviorBoard-Main_device.json and BehaviorBoard-Main.yml, which the overnight copy (rig-sync) alarms on if missing. A device folder holding only those two counts as empty. Errors on the board&apos;s logging chain do not reach it.</Description>
+              <Description>Writes manifest.json into the experiment folder (OpenRigs.Manifest), finding PathPrefix itself: once when the folder appears (status partial, outcome running) and again when the run ends. Its input is the run, the frames recorded: completed when the run length&apos;s frames are written, error with a Watchdog&apos;s message, run.items the frame count; a controller stop is stopped, with the stop&apos;s reason. It records the machine, this repo&apos;s commit, Bonsai&apos;s command line (--property values), who launched it and sent Go (the parameters at Go are in Schemas_Experiment), rig.yml&apos;s path and hash as read at Start (its settings are in Schemas_Rig), and what the experiment must leave: a folder for each device in rig.yml this workflow publishes (BehaviorBoard-Main/, Camera-Box/), Schemas/Schemas_Rig_ and Schemas/Schemas_Experiment_, each settings file expected on its own, and (harp) for each Harp device in rig.yml the two files RecordHarpDevices writes, BehaviorBoard-Main_device.json and BehaviorBoard-Main.yml, which the overnight copy (rig-sync) alarms on if missing. A device folder holding only those two counts as empty. Errors on the board&apos;s logging chain do not reach it.</Description>
               <mf:IngestScript>coen-behaviour-box</mf:IngestScript>
               <mf:ConfigFiles>C:\Coen-Lab-Local\RigConfigs\%COMPUTERNAME%\rig.yml</mf:ConfigFiles>
-              <mf:ExpectedFiles>auto;harp;RigSchema/</mf:ExpectedFiles>
+              <mf:ExpectedFiles>auto;harp;Schemas/Schemas_Rig_;Schemas/Schemas_Experiment_</mf:ExpectedFiles>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>PathPrefix</Name>
@@ -1032,7 +1032,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="ext:SessionJson">
-                <ext:Name>RigSchema</ext:Name>
+                <ext:Name>Schemas_Rig</ext:Name>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -1042,6 +1042,23 @@
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="ConfigRoot" />
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>ExperimentGo</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="orcl:ExperimentSettings" />
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>PathPrefix</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Zip" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="ext:SessionJson">
+                <ext:Name>Schemas_Experiment</ext:Name>
+              </Combinator>
             </Expression>
           </Nodes>
           <Edges>
@@ -1072,6 +1089,10 @@
             <Edge From="28" To="29" Label="Source2" />
             <Edge From="29" To="30" Label="Source1" />
             <Edge From="32" To="16" Label="Source1" />
+            <Edge From="33" To="34" Label="Source1" />
+            <Edge From="34" To="36" Label="Source1" />
+            <Edge From="35" To="36" Label="Source2" />
+            <Edge From="36" To="37" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>

@@ -11,7 +11,7 @@ param(
 #      ExperimentManifest expects, and that each window in config\main.layout is on a node it fits.
 #   3. Runs RigDevice on config\rig-template.yml: the names the workflow asks for are found,
 #      and a missing entry or a name breaking the naming rules stops it; and every key in it
-#      reaches the RigSchema JSON the experiment logs.
+#      reaches the Schemas_Rig JSON the experiment logs.
 #   4. ExposureFitsTrigger's limit (19,000 us passes at 50 Hz, 19,001 and 30,000 stop),
 #      SessionKey on an experiment folder's path, no dump or register map of the workflow's own, Watchdog's own message, and CameraOverrides'
 #      refusal without a "Parameter name" line; in main.bonsai, every timeout is a Watchdog with a message.
@@ -135,7 +135,7 @@ public class BuiltObjects : System.Linq.Expressions.ExpressionVisitor {
     $recorder = @($objects.Found | Where-Object { $_.GetType().Name -eq 'ManifestRecorder' })
     $planField = if ($recorder.Count) { $recorder[0].GetType().GetFields([Reflection.BindingFlags]'Instance,NonPublic,Public') | Where-Object { $_.FieldType.Name -eq 'ExpectedPlan' } | Select-Object -First 1 }
     $expected = if ($planField) { @($planField.GetValue($recorder[0]).Entries | ForEach-Object { $_.Path }) } else { @() }
-    $want = 'BehaviorBoard-Main/', 'Camera-Box/', 'BehaviorBoard-Main/BehaviorBoard-Main_device.json', 'BehaviorBoard-Main/BehaviorBoard-Main.yml', 'RigSchema/'
+    $want = 'BehaviorBoard-Main/', 'Camera-Box/', 'BehaviorBoard-Main/BehaviorBoard-Main_device.json', 'BehaviorBoard-Main/BehaviorBoard-Main.yml', 'Schemas/Schemas_Rig_', 'Schemas/Schemas_Experiment_'
     if (($expected -join ', ') -eq ($want -join ', ')) { "  ok    ExperimentManifest expects $($expected -join ', ')" }
     else {
         "  FAIL  ExperimentManifest expects '$($expected -join ', ')', not '$($want -join ', ')'"; $failed++
@@ -225,7 +225,7 @@ if ($Step -eq 'RigDevice') {
             else { "  FAIL  $($c[1]): $($x.GetType().Name): $($x.Message)"; $failed++ }
         }
     }
-    # The experiment's RigSchema JSON is rig.yml as parsed, and the manifest keeps only rig.yml's hash
+    # The experiment's Schemas_Rig JSON is rig.yml as parsed, and the manifest keeps only rig.yml's hash
     # (OpenRigs.Manifest 0.1.0-local.7), so every key in rig.yml must reach the JSON.
     try {
         $x = $E::Constant([System.Reactive.Linq.Observable]::Return($yaml), [IObservable[string]])
@@ -248,9 +248,9 @@ if ($Step -eq 'RigDevice') {
         }
         Add-YamlKeys ((New-Object YamlDotNet.Serialization.Deserializer).Deserialize((New-Object IO.StringReader $yaml))) ''
         $lost = @($yamlKeys | Where-Object { $jsonKeys -notcontains $_ })
-        if ($yamlKeys.Count -gt 0 -and $lost.Count -eq 0) { "  ok    RigSchema JSON keeps all $($yamlKeys.Count) keys of rig-template.yml" }
-        else { "  FAIL  RigSchema JSON lost $($lost.Count) of $($yamlKeys.Count) keys of rig-template.yml: $($lost -join ', ')"; $failed++ }
-    } catch { $x = $_.Exception; while ($x.InnerException) { $x = $x.InnerException }; "  FAIL  RigSchema JSON: $($x.Message)"; $failed++ }
+        if ($yamlKeys.Count -gt 0 -and $lost.Count -eq 0) { "  ok    Schemas_Rig JSON keeps all $($yamlKeys.Count) keys of rig-template.yml" }
+        else { "  FAIL  Schemas_Rig JSON lost $($lost.Count) of $($yamlKeys.Count) keys of rig-template.yml: $($lost -join ', ')"; $failed++ }
+    } catch { $x = $_.Exception; while ($x.InnerException) { $x = $x.InnerException }; "  FAIL  Schemas_Rig JSON: $($x.Message)"; $failed++ }
     exit $(if ($failed) { 1 } else { 0 })
 }
 
@@ -284,9 +284,9 @@ if ($Step -eq 'Checks') {
         if ($wf -match 'DumpRegisters>true</harp:DumpRegisters>\s*<harp:MuteReplies' -or $wf -match 'ext:HarpDeviceSchema' -or $wf -match '>BehaviorCommands<') {
             "  FAIL  main.bonsai still asks for the board's dump, writes its register map, or names its commands BehaviorCommands, itself"; $failed++
         } else { "  ok    main.bonsai leaves the board's dump and register map to RecordHarpDevices" }
-        $json =[UclOpenCoenBehaviourBox.SessionJson]::Write($experiment, 'RigSchema', '{"a":1}', [datetime]::SpecifyKind([datetime]'2026-11-02T09:05:07', 'Utc'))
-        if ($json -eq (Join-Path $experiment 'RigSchema\RigSchema_2026-11-02T09-05-07.json') -and [IO.File]::ReadAllText($json) -eq '{"a":1}' -and -not (Test-Path "$json.tmp")) {
-            "  ok    SessionJson wrote RigSchema\RigSchema_<DateTime>.json under the experiment folder it was given"
+        $json =[UclOpenCoenBehaviourBox.SessionJson]::Write($experiment, 'Schemas_Rig', '{"a":1}', [datetime]::SpecifyKind([datetime]'2026-11-02T09:05:07', 'Utc'))
+        if ($json -eq (Join-Path $experiment 'Schemas\Schemas_Rig_2026-11-02T09-05-07.json') -and [IO.File]::ReadAllText($json) -eq '{"a":1}' -and -not (Test-Path "$json.tmp")) {
+            "  ok    SessionJson wrote Schemas\Schemas_Rig_<DateTime>.json under the experiment folder it was given"
         } else { "  FAIL  SessionJson wrote '$json'"; $failed++ }
         # LogDataSchema in OpenRigs.Logging 0.1.0-bbox.1 reads its file name before the experiment folder exists.
         if ((Get-Content (Join-Path $repo 'src\main.bonsai') -Raw) -match 'LogDataSchema\.bonsai') { "  FAIL  main.bonsai uses LogDataSchema, which writes to the include's saved path in this build"; $failed++ }
