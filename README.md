@@ -54,8 +54,8 @@ Each experiment writes to `<rootPath>\sub-<subject>\ses-<session>_<date>\` (ucl-
 - `BehaviorBoard-Main\BehaviorBoard-Main_<DateTime>.bin`: the board's register dump (its read replies, one file for every register), which `RecordHarpDevices` asks for 0.5 s after the experiment folder appears, so its settings for the experiment are on record. (av-dome's current logger, `UclOpen.Logging` from May 2026, keeps only the first reply of each second: ucl-open/av-dome#33.)
 - `BehaviorBoard-Main\BehaviorBoard-Main_device.json`: which board it was: its port, USB serial, WhoAmI, hardware, firmware and core versions, device name and Harp serial, from that dump once it has finished (`RecordHarpDevices`).
 - `BehaviorBoard-Main\BehaviorBoard-Main.yml`: the board's register map, Harp.Behavior's `device.yml`, so the `.bin` files can be decoded from the experiment alone.
-- `Schemas\Schemas_Rig_<DateTime>.json`: `rig.yml` as parsed.
-- `Schemas\Schemas_Experiment_<DateTime>.json`: the experiment's settings at Go, from OpenRigs.Control's `ExperimentSettings`: subject, session, rig, workflow, repository, commit, who launched and sent Go, and every ExperimentControl parameter at Go (`RunLengthMins`, `ExposureTime`, `Gain`). Until 7 Nov 2026 the rig file was `RigSchema\RigSchema_<DateTime>.json` and the parameters were in `manifest.json`'s `control`.
+- `Settings\Settings_Rig_<DateTime>.json`: `rig.yml` as parsed.
+- `Settings\Settings_Experiment_<DateTime>.json`: the experiment's settings at Go, from OpenRigs.Control's `ExperimentSettings`: subject, session, rig, workflow, repository, commit, who launched and sent Go, and every ExperimentControl parameter at Go (`RunLengthMins`, `ExposureTime`, `Gain`). Until 7 Nov 2026 the rig file was `RigSchema\RigSchema_<DateTime>.json` and the parameters were in `manifest.json`'s `control`.
 
 Experiments before 30 Oct 2026 have `Cameras\VideoData_Camera1.avi` and `.csv`, one file per run, and `BehaviorBoard\BehaviorBoard_*`. Before the clock was set (30 Oct 2026), the board counted from power-on, so file names read `1904-01-...` and Harp times are uptime, not UTC.
 
@@ -69,10 +69,10 @@ Every experiment folder gets a `manifest.json` (`Logging` > `ExperimentManifest`
 - the machine, the subject and session from the folder name;
 - this repo's commit and whether the clone was dirty;
 - Bonsai's command line with each `--property` value;
-- the subject, session and who launched it and sent Go, from the experiment controller (the parameters at Go are in `Schemas_Experiment`);
+- the subject, session and who launched it and sent Go, from the experiment controller (the parameters at Go are in `Settings_Experiment`);
 - `rig.yml` as read at Start, with its sha256;
 - how the run ended: `completed` when the run length's frames were written, `error` with a Watchdog's message, `stopped` after a controller stop (with its reason), `ended-early` when the workflow stopped any other way;
-- `expected`: a folder for each device in `rig.yml` this workflow publishes (`BehaviorBoard-Main/`, `Camera-Box/`), each Harp device's `_device.json` and `.yml` (`harp`), and `Schemas/Schemas_Rig_` and `Schemas/Schemas_Experiment_`, each settings file on its own, with how many files each holds;
+- `expected`: a folder for each device in `rig.yml` this workflow publishes (`BehaviorBoard-Main/`, `Camera-Box/`), each Harp device's `_device.json` and `.yml` (`harp`), and `Settings/Settings_Rig_` and `Settings/Settings_Experiment_`, each settings file on its own, with how many files each holds;
 - every file in the folder with its size. Its `status` is `partial`: the overnight copy (rig-setup's `rig-sync.ps1`) checks every listed file is present and closed, adds sizes and hashes, writes `complete`, and only then copies the experiment to the server, the manifest last. A listed file that is missing, or an expected folder holding nothing (a board that never logged), stops that experiment's copy and raises an alarm on the rig's health report. `ingest_script` is `coen-behaviour-box`, the name the server's ingest registry runs for this data. Errors on the board's logging chain do not reach the node, so an experiment whose board log failed reads `ended-early`, not `error`; its empty `BehaviorBoard-Main/` is what says so.
 
 ## Live view

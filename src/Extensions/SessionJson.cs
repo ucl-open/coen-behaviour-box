@@ -10,18 +10,18 @@ namespace UclOpenCoenBehaviourBox
     /// <summary>
     /// Writes settings JSON into the experiment folder as &lt;Folder&gt;\&lt;Name&gt;_&lt;DateTime&gt;.json (the Open Rigs
     /// logging spec, section 6), from the text and the experiment folder (PathPrefix) together. The folder is the
-    /// name up to its first _, as OpenRigs.Logging names a log's: Schemas_Rig and Schemas_Experiment both go in
-    /// Schemas (lib-open-rigs' settings-files plan, 7 Nov 2026). In place of
+    /// name up to its first _, as OpenRigs.Logging names a log's: Settings_Rig and Settings_Experiment both go in
+    /// Settings (lib-open-rigs' settings-files plan, 7 Nov 2026). In place of
     /// OpenRigs.Logging's LogDataSchema: in the 0.1.0-bbox.1 build its writer reads its file name when the
     /// workflow starts, before the experiment folder exists, so it writes to the path saved in the include
     /// (open-rigs 6badbdd fixes it, on a branch not yet in main or the build, 2 Nov 2026).
     /// </summary>
     [Combinator]
     [WorkflowElementCategory(ElementCategory.Sink)]
-    [Description("Writes the JSON text (Item1) into the experiment folder (Item2, PathPrefix) as <Folder>\\<Name>_<DateTime>.json, the folder the name up to its first _ (Schemas_Rig in Schemas), DateTime the write's UTC time.")]
+    [Description("Writes the JSON text (Item1) into the experiment folder (Item2, PathPrefix) as <Folder>\\<Name>_<DateTime>.json, the folder the name up to its first _ (Settings_Rig in Settings), DateTime the write's UTC time.")]
     public class SessionJson
     {
-        [Description("The settings' name (Schemas_Rig); their folder is the name up to its first _ (Schemas).")]
+        [Description("The settings' name (Settings_Rig); their folder is the name up to its first _ (Settings).")]
         public string Name { get; set; }
 
         public IObservable<Tuple<string, string>> Process(IObservable<Tuple<string, string>> source)
