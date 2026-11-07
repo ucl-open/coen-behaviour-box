@@ -24,6 +24,7 @@ behaviorBoard:
       countsPerRev: 4096
       wheelDiameterMm: 150.0
     usbSerial: CHANGE-ME
+    wiring: null
 camera:
   box:
     binning: 1
