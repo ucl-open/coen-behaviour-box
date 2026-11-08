@@ -2332,12 +2332,13 @@ namespace UclOpenCoenBehaviourBox
         }
     
         /// <summary>
-        /// What is on the line, a word from the lab's list (wiredDevices in K:\config\device-dictionary.json).
+        /// What is on the line, as the workflow's board-lines.yml names it. Nothing holds the word to a lab list yet: wiredDevices in K:\config\device-dictionary.json, checked by rig-control's names check, is planned.
         /// </summary>
         [Newtonsoft.Json.JsonPropertyAttribute("device", Required=Newtonsoft.Json.Required.Always)]
         [YamlDotNet.Serialization.YamlMemberAttribute(Alias="device")]
-        [System.ComponentModel.DescriptionAttribute("What is on the line, a word from the lab\'s list (wiredDevices in K:\\config\\device" +
-            "-dictionary.json).")]
+        [System.ComponentModel.DescriptionAttribute("What is on the line, as the workflow\'s board-lines.yml names it. Nothing holds th" +
+            "e word to a lab list yet: wiredDevices in K:\\config\\device-dictionary.json, chec" +
+            "ked by rig-control\'s names check, is planned.")]
         public string Device
         {
             get
