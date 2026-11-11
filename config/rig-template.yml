@@ -32,6 +32,7 @@ camera:
     exposureTime: 10000.0
     gain: 5.0
     liveView: null
+    pixelFormat: Mono8
     serialNumber: CHANGE-ME
     triggerFrequency: 50.0
 rigId: CHANGE-ME
