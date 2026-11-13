@@ -942,11 +942,11 @@ namespace UclOpenCoenBehaviourBox
 
 
     /// <summary>
-    /// A pulsed output whose width comes from a calibration curve at run time, such as a reward valve.
+    /// A pulsed output whose width comes from a calibration curve's linear fit at run time, such as a reward valve.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
-    [System.ComponentModel.DescriptionAttribute("A pulsed output whose width comes from a calibration curve at run time, such as a" +
-        " reward valve.")]
+    [System.ComponentModel.DescriptionAttribute("A pulsed output whose width comes from a calibration curve\'s linear fit at run ti" +
+        "me, such as a reward valve.")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
     public partial class CalibratedPulse : PulseOutput
@@ -954,32 +954,24 @@ namespace UclOpenCoenBehaviourBox
     
         private string _artefact;
     
-        private OpenRigs.Core.CalibrationModel _fit;
-    
-        private int _maxAgeDays;
-    
         public CalibratedPulse()
         {
-            _fit = OpenRigs.Core.CalibrationModel.LinearFit;
-            _maxAgeDays = 90;
         }
     
         protected CalibratedPulse(CalibratedPulse other) : 
                 base(other)
         {
             _artefact = other._artefact;
-            _fit = other._fit;
-            _maxAgeDays = other._maxAgeDays;
         }
     
         /// <summary>
-        /// Relative path of the CalibrationCurve that converts the requested quantity to a pulse width: a file written by the platform's DispenseCalibration procedure into this machine's calibration folder.
+        /// Relative path of the CalibrationCurve that converts the requested quantity to a pulse width: a file in this machine's calibration folder holding the measured points and their linear fit.
         /// </summary>
         [Newtonsoft.Json.JsonPropertyAttribute("artefact", Required=Newtonsoft.Json.Required.Always)]
         [YamlDotNet.Serialization.YamlMemberAttribute(Alias="artefact")]
         [System.ComponentModel.DescriptionAttribute("Relative path of the CalibrationCurve that converts the requested quantity to a p" +
-            "ulse width: a file written by the platform\'s DispenseCalibration procedure into " +
-            "this machine\'s calibration folder.")]
+            "ulse width: a file in this machine\'s calibration folder holding the measured poi" +
+            "nts and their linear fit.")]
         public string Artefact
         {
             get
@@ -989,44 +981,6 @@ namespace UclOpenCoenBehaviourBox
             set
             {
                 _artefact = value;
-            }
-        }
-    
-        /// <summary>
-        /// How the rig fits the artefact's points at startup. LinearFit suits repeated weighings.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("fit")]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="fit")]
-        [System.ComponentModel.DescriptionAttribute("How the rig fits the artefact\'s points at startup. LinearFit suits repeated weigh" +
-            "ings.")]
-        public OpenRigs.Core.CalibrationModel Fit
-        {
-            get
-            {
-                return _fit;
-            }
-            set
-            {
-                _fit = value;
-            }
-        }
-    
-        /// <summary>
-        /// Warn at startup when the artefact is older than this many days. 0 disables the check.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("maxAgeDays")]
-        [YamlDotNet.Serialization.YamlMemberAttribute(Alias="maxAgeDays")]
-        [System.ComponentModel.DescriptionAttribute("Warn at startup when the artefact is older than this many days. 0 disables the ch" +
-            "eck.")]
-        public int MaxAgeDays
-        {
-            get
-            {
-                return _maxAgeDays;
-            }
-            set
-            {
-                _maxAgeDays = value;
             }
         }
     
@@ -1046,9 +1000,7 @@ namespace UclOpenCoenBehaviourBox
             {
                 stringBuilder.Append(", ");
             }
-            stringBuilder.Append("Artefact = " + _artefact + ", ");
-            stringBuilder.Append("Fit = " + _fit + ", ");
-            stringBuilder.Append("MaxAgeDays = " + _maxAgeDays);
+            stringBuilder.Append("Artefact = " + _artefact);
             return true;
         }
     }
