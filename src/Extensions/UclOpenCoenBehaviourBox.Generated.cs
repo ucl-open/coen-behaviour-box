@@ -163,13 +163,13 @@ namespace UclOpenCoenBehaviourBox
         }
     
         /// <summary>
-        /// What is plugged into each line (Pip, 7 Nov 2026): checked at Start against the lines the workflow uses (its schemas/board-lines.yml) by OpenRigs.HarpDevices.
+        /// What is plugged into each line (Pip, 7 Nov 2026). Not checked at Start against the workflow.
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         [Newtonsoft.Json.JsonPropertyAttribute("wiring")]
         [YamlDotNet.Serialization.YamlMemberAttribute(Alias="wiring")]
-        [System.ComponentModel.DescriptionAttribute("What is plugged into each line (Pip, 7 Nov 2026): checked at Start against the li" +
-            "nes the workflow uses (its schemas/board-lines.yml) by OpenRigs.HarpDevices.")]
+        [System.ComponentModel.DescriptionAttribute("What is plugged into each line (Pip, 7 Nov 2026). Not checked at Start against th" +
+            "e workflow.")]
         public BoardWiring Wiring
         {
             get
@@ -361,12 +361,11 @@ namespace UclOpenCoenBehaviourBox
 
     /// <summary>
     /// What is plugged into each line of a Harp Behavior board, by the board's own channel names. A
-    ///line left out is unknown, which is allowed only for a line no workflow on the rig uses.
+    ///line left out is unknown.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
     [System.ComponentModel.DescriptionAttribute("What is plugged into each line of a Harp Behavior board, by the board\'s own chann" +
-        "el names. A\nline left out is unknown, which is allowed only for a line no workfl" +
-        "ow on the rig uses.")]
+        "el names. A\nline left out is unknown.")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
     public partial class BoardWiring
@@ -2272,14 +2271,13 @@ namespace UclOpenCoenBehaviourBox
 
 
     /// <summary>
-    /// What is plugged into one line of the board. A workflow's schemas/board-lines.yml says what it
-    ///uses each line for, and OpenRigs.HarpDevices compares the two at Start: device, side and targets
-    ///must agree on every line the workflow uses, or the workflow stops. part and note are for people.
+    /// What is plugged into one line of the board. Nothing compares it with a workflow at Start; a
+    ///dome's reward and Zapit lines are read from it. part and note are for people.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.7.2.0 (Newtonsoft.Json v13.0.0.0, YamlDotNet v16.0.0.0)")]
-    [System.ComponentModel.DescriptionAttribute(@"What is plugged into one line of the board. A workflow's schemas/board-lines.yml says what it
-    uses each line for, and OpenRigs.HarpDevices compares the two at Start: device, side and targets
-    must agree on every line the workflow uses, or the workflow stops. part and note are for people.")]
+    [System.ComponentModel.DescriptionAttribute("What is plugged into one line of the board. Nothing compares it with a workflow a" +
+        "t Start; a\ndome\'s reward and Zapit lines are read from it. part and note are for" +
+        " people.")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
     public partial class WiredLine
@@ -2309,13 +2307,12 @@ namespace UclOpenCoenBehaviourBox
         }
     
         /// <summary>
-        /// What is on the line, as the workflow's board-lines.yml names it: one of the lab's wiredDevices in K:\config\device-dictionary.json, checked by app-rig-control's names check.
+        /// What is on the line: one of the lab's wiredDevices in K:\config\device-dictionary.json. Nothing checks it against that list.
         /// </summary>
         [Newtonsoft.Json.JsonPropertyAttribute("device", Required=Newtonsoft.Json.Required.Always)]
         [YamlDotNet.Serialization.YamlMemberAttribute(Alias="device")]
-        [System.ComponentModel.DescriptionAttribute("What is on the line, as the workflow\'s board-lines.yml names it: one of the lab\'s" +
-            " wiredDevices in K:\\config\\device-dictionary.json, checked by app-rig-control\'s " +
-            "names check.")]
+        [System.ComponentModel.DescriptionAttribute("What is on the line: one of the lab\'s wiredDevices in K:\\config\\device-dictionary" +
+            ".json. Nothing checks it against that list.")]
         public string Device
         {
             get
