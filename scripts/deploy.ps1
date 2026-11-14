@@ -34,17 +34,18 @@ Write-Output "Synchronizing environment..."
 &uv sync
 Assert-Success "uv sync"
 
-Write-Output "Regenerating JSON schema from pydantic models..."
-&uv run regenerate-schemas
-Assert-Success "Regenerating the schemas"
-
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     throw "The 'dotnet' command was not found. Install the .NET SDK: https://dotnet.microsoft.com/download"
 }
 
+# Before regenerate-schemas: it runs bonsai.sgen, which a fresh clone lacks until the tools are restored.
 Write-Output "Restoring dotnet tools..."
 &dotnet tool restore
 Assert-Success "dotnet tool restore"
+
+Write-Output "Regenerating JSON schema from pydantic models..."
+&uv run regenerate-schemas
+Assert-Success "Regenerating the schemas"
 
 # Derive C# namespace from schema filename (snake_case -> PascalCase).
 $schemaFile = Get-ChildItem ".\src\DataSchemas\*.json" | Select-Object -First 1
