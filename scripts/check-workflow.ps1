@@ -212,7 +212,7 @@ if ($Step -eq 'RigDevice') {
     }
     # Each must stop the workflow, with the exception and the words that say why.
     $refused = @(
-        @('Camera', 'Camera-Face', 'KeyNotFoundException', 'Its camera entries: box.'),
+        @('Camera', 'Camera-Face', 'KeyNotFoundException', 'Its camera entries: overhead.'),
         @('Camera', 'Camera-overhead', 'ArgumentException', 'starting with a capital'),
         @('Camera', 'Camera-Overhead_2', 'ArgumentException', 'only letters and digits'),
         @('Camera', 'CameraBox', 'ArgumentException', 'Kind-Instance')
