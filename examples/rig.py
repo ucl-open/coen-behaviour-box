@@ -17,9 +17,9 @@ HEADER = """\
 # else that differs on this rig. Per-rig values are never committed. To change the template
 # itself, edit examples/rig.py and run it again rather than editing config/rig-template.yml.
 # Each device sits under its kind by name: the workflow drives behaviorBoard: main:
-# (BehaviorBoard-Main in the data) and camera: box: (Camera-Box), and stops at startup if either
+# (BehaviorBoard-Main in the data) and camera: overhead: (Camera-Overhead), and stops at startup if either
 # is missing. The frame rate is behaviorBoard.main.cameraTriggerController.trigger0Frequency;
-# camera.box.triggerFrequency and trigger1Frequency are not used by this rig. usbSerial is the
+# camera.overhead.triggerFrequency and trigger1Frequency are not used by this rig. usbSerial is the
 # board's USB serial, as the rig's hardware scan lists it for portName: the workflow stops at
 # Start if the board on portName has another. rigId is the rig's code (B1 GEEK-BBOX1, D1 and D2
 # the green domes, O1 and O2 the blue opto rigs, A1 PINK-ACUTE), the end of every session ID.
@@ -42,7 +42,7 @@ rig = BehaviourBoxRig(
         )
     },
     camera={
-        "box": SpinnakerCamera(serial_number="CHANGE-ME", exposure_time=10000, gain=5, binning=1, trigger_frequency=50)
+        "overhead": SpinnakerCamera(serial_number="CHANGE-ME", exposure_time=10000, gain=5, binning=1, trigger_frequency=50)
     },
 )
 

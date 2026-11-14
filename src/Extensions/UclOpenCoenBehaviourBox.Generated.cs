@@ -306,12 +306,12 @@ namespace UclOpenCoenBehaviourBox
         }
     
         /// <summary>
-        /// Triggered Spinnaker cameras by name, such as box (Camera-Box), whose frame rate is the board's trigger0_frequency.
+        /// Triggered Spinnaker cameras by name, such as overhead (Camera-Overhead), whose frame rate is the board's trigger0_frequency.
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         [Newtonsoft.Json.JsonPropertyAttribute("camera", Required=Newtonsoft.Json.Required.Always)]
         [YamlDotNet.Serialization.YamlMemberAttribute(Alias="camera")]
-        [System.ComponentModel.DescriptionAttribute("Triggered Spinnaker cameras by name, such as box (Camera-Box), whose frame rate i" +
+        [System.ComponentModel.DescriptionAttribute("Triggered Spinnaker cameras by name, such as overhead (Camera-Overhead), whose frame rate i" +
             "s the board\'s trigger0_frequency.")]
         public System.Collections.Generic.Dictionary<string, SpinnakerCamera> Camera
         {

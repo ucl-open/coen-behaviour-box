@@ -10,9 +10,9 @@ namespace UclOpenCoenBehaviourBox
 {
     /// <summary>
     /// Takes one device's settings out of rig.yml by the device's name. rig.yml groups each
-    /// kind's devices by name (camera: box:) and binds each to its hardware; the workflow asks
+    /// kind's devices by name (camera: overhead:) and binds each to its hardware; the workflow asks
     /// for the names it drives, and the name in the data is the kind and the entry joined by a
-    /// hyphen (Camera-Box). An entry the workflow does not ask for is ignored. A name it asks
+    /// hyphen (Camera-Overhead). An entry the workflow does not ask for is ignored. A name it asks
     /// for and rig.yml does not have stops the workflow, saying which entries the file has,
     /// where Bonsai's Index would say only that the key was not present. The output carries the
     /// name with the settings, so a device's files take their name from the same place as its
@@ -20,7 +20,7 @@ namespace UclOpenCoenBehaviourBox
     /// </summary>
     [Combinator]
     [WorkflowElementCategory(ElementCategory.Transform)]
-    [Description("Takes one device's settings from rig.yml by its name, Kind-Instance: Camera-Box is camera: box:. Outputs the name with them, for naming the device's files. Stops the workflow, naming the entries rig.yml has, if it has none by that name.")]
+    [Description("Takes one device's settings from rig.yml by its name, Kind-Instance: Camera-Overhead is camera: overhead:. Outputs the name with them, for naming the device's files. Stops the workflow, naming the entries rig.yml has, if it has none by that name.")]
     public class RigDevice
     {
         [Description("The device's name in the data: its kind and its entry in rig.yml, joined by a hyphen, such as BehaviorBoard-Main.")]
@@ -44,7 +44,7 @@ namespace UclOpenCoenBehaviourBox
             {
                 throw new ArgumentException(string.Format(
                     "RigDevice's Name is '{0}'; it must be Kind-Instance, each part starting with a capital and " +
-                    "holding only letters and digits, such as Camera-Box.", name));
+                    "holding only letters and digits, such as Camera-Overhead.", name));
             }
 
             var kind = LowerFirst(parts[0]);
@@ -82,7 +82,7 @@ namespace UclOpenCoenBehaviourBox
             Settings = settings;
         }
 
-        [Description("The device's name in the data, such as Camera-Box: its folder and the start of its files' names.")]
+        [Description("The device's name in the data, such as Camera-Overhead: its folder and the start of its files' names.")]
         public string Name { get; private set; }
 
         [Description("The device's entry in rig.yml.")]

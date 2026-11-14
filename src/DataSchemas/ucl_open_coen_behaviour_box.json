@@ -117,7 +117,7 @@
           "additionalProperties": {
             "$ref": "#/$defs/SpinnakerCamera"
           },
-          "description": "Triggered Spinnaker cameras by name, such as box (Camera-Box), whose frame rate is the board's trigger0_frequency.",
+          "description": "Triggered Spinnaker cameras by name, such as overhead (Camera-Overhead), whose frame rate is the board's trigger0_frequency.",
           "title": "Camera",
           "type": "object"
         }

@@ -135,7 +135,7 @@ public class BuiltObjects : System.Linq.Expressions.ExpressionVisitor {
     $recorder = @($objects.Found | Where-Object { $_.GetType().Name -eq 'ManifestRecorder' })
     $planField = if ($recorder.Count) { $recorder[0].GetType().GetFields([Reflection.BindingFlags]'Instance,NonPublic,Public') | Where-Object { $_.FieldType.Name -eq 'ExpectedPlan' } | Select-Object -First 1 }
     $expected = if ($planField) { @($planField.GetValue($recorder[0]).Entries | ForEach-Object { $_.Path }) } else { @() }
-    $want = 'BehaviorBoard-Main/', 'Camera-Box/', 'BehaviorBoard-Main/BehaviorBoard-Main_device.json', 'BehaviorBoard-Main/BehaviorBoard-Main.yml', 'Settings/Settings_Rig_', 'Settings/Settings_Experiment_'
+    $want = 'BehaviorBoard-Main/', 'Camera-Overhead/', 'BehaviorBoard-Main/BehaviorBoard-Main_device.json', 'BehaviorBoard-Main/BehaviorBoard-Main.yml', 'Settings/Settings_Rig_', 'Settings/Settings_Experiment_'
     if (($expected -join ', ') -eq ($want -join ', ')) { "  ok    ExperimentManifest expects $($expected -join ', ')" }
     else {
         "  FAIL  ExperimentManifest expects '$($expected -join ', ')', not '$($want -join ', ')'"; $failed++
@@ -213,8 +213,8 @@ if ($Step -eq 'RigDevice') {
     # Each must stop the workflow, with the exception and the words that say why.
     $refused = @(
         @('Camera', 'Camera-Face', 'KeyNotFoundException', 'Its camera entries: box.'),
-        @('Camera', 'Camera-box', 'ArgumentException', 'starting with a capital'),
-        @('Camera', 'Camera-Box_2', 'ArgumentException', 'only letters and digits'),
+        @('Camera', 'Camera-overhead', 'ArgumentException', 'starting with a capital'),
+        @('Camera', 'Camera-Overhead_2', 'ArgumentException', 'only letters and digits'),
         @('Camera', 'CameraBox', 'ArgumentException', 'Kind-Instance')
     )
     foreach ($c in $refused) {
@@ -263,7 +263,7 @@ if ($Step -eq 'Checks') {
     # Exposure at 50 Hz with the workflow's 1000 us margin: 19,000 ran at the full rate on GEEK-BBOX1
     # (30 Oct 2026); 30,000 ran at 25 fps with every frame mistimed.
     foreach ($c in @(@(19000, $true), @(10000, $true), @(19001, $false), @(30000, $false))) {
-        $x = Get-Refusal { [UclOpenCoenBehaviourBox.ExposureFitsTrigger]::Check('Camera-Box', $c[0], 50, 1000) }
+        $x = Get-Refusal { [UclOpenCoenBehaviourBox.ExposureFitsTrigger]::Check('Camera-Overhead', $c[0], 50, 1000) }
         if ($c[1] -and $x) { "  FAIL  ExposureTime $($c[0]) refused: $($x.Message)"; $failed++ }
         elseif (-not $c[1] -and -not $x) { "  FAIL  ExposureTime $($c[0]) accepted at 50 Hz"; $failed++ }
         elseif (-not $c[1] -and -not $x.Message.Contains('to 19000 or less')) { "  FAIL  ExposureTime $($c[0]): $($x.Message)"; $failed++ }
@@ -316,7 +316,7 @@ if ($Step -eq 'Checks') {
     # CameraOverrides: a refusal reads as one message, with no "Parameter name" line.
     $over = New-Object UclOpenCoenBehaviourBox.CameraOverrides
     $over.Binning = 0
-    $camera = New-Object 'UclOpenCoenBehaviourBox.NamedDevice[UclOpenCoenBehaviourBox.SpinnakerCamera]' 'Camera-Box', (New-Object UclOpenCoenBehaviourBox.SpinnakerCamera)
+    $camera = New-Object 'UclOpenCoenBehaviourBox.NamedDevice[UclOpenCoenBehaviourBox.SpinnakerCamera]' 'Camera-Overhead', (New-Object UclOpenCoenBehaviourBox.SpinnakerCamera)
     $x = Get-Refusal { $null = Invoke-Process $over $null ($return.MakeGenericMethod($camera.GetType()).Invoke($null, @(, $camera.PSObject.BaseObject))) }
     if ($x -and $x.Message.Contains('must be 1 or more') -and -not $x.Message.Contains('Parameter name')) { "  ok    CameraOverrides refused Binning 0 in one message" } else { "  FAIL  CameraOverrides on Binning 0: $(if ($x) { $x.Message } else { 'accepted' })"; $failed++ }
     $text = [IO.File]::ReadAllText((Join-Path $repo 'src\main.bonsai'))
